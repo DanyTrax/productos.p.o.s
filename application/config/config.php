@@ -22,7 +22,27 @@
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/platea21/';
+$protocol = 'http://';
+if (
+	(! empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+	|| (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+	|| (! empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+) {
+	$protocol = 'https://';
+}
+
+if (php_sapi_name() === 'cli' || empty($_SERVER['HTTP_HOST'])) {
+	$config['base_url'] = 'http://localhost/platea21/';
+} else {
+	$script = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/index.php';
+	$dir = str_replace('\\', '/', dirname($script));
+	if ($dir === '/' || $dir === '.' || $dir === '') {
+		$subdir = '';
+	} else {
+		$subdir = rtrim($dir, '/');
+	}
+	$config['base_url'] = $protocol . $_SERVER['HTTP_HOST'] . $subdir . '/';
+}
 
 /*
 |--------------------------------------------------------------------------
