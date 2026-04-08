@@ -63,60 +63,6 @@ function syncPosFullscreenUi() {
 	document.addEventListener('webkitfullscreenchange', onFsChange);
 	document.addEventListener('MSFullscreenChange', onFsChange);
 })();
-function syncPosMobileCartToggleSummary() {
-	if (typeof jQuery === 'undefined') {
-		return;
-	}
-	var n = jQuery('#ItemsNum span').first().text().trim() || '0';
-	var tot = jQuery('#total').text().trim() || '';
-	var cur = <?= json_encode($this->setting->currency); ?>;
-	var openL = <?= json_encode(label('PosMobileCartOpen')); ?>;
-	var closeL = <?= json_encode(label('PosMobileCartClose')); ?>;
-	var expanded = jQuery('body').hasClass('pos-mobile-cart-expanded');
-	var line = n + ' · ' + (tot !== '' ? tot + ' ' + cur : '—');
-	jQuery('.pos-mobile-cart-toggle-line').text(line);
-	jQuery('.pos-mobile-cart-toggle-hint').text(expanded ? closeL : openL);
-	jQuery('#posMobileCartToggle').attr('aria-expanded', expanded ? 'true' : 'false');
-	jQuery('#posMobileCartToggle .pos-mobile-cart-toggle-icon')
-		.toggleClass('fa-chevron-down', !expanded)
-		.toggleClass('fa-chevron-up', expanded);
-}
-function togglePosMobileCartPanel() {
-	if (typeof jQuery === 'undefined') {
-		return;
-	}
-	jQuery('body').toggleClass('pos-mobile-cart-expanded');
-	var expanded = jQuery('body').hasClass('pos-mobile-cart-expanded');
-	try {
-		localStorage.setItem('platea_pos_mobile_cart_expanded', expanded ? '1' : '0');
-	} catch (e) {}
-	syncPosMobileCartToggleSummary();
-}
-function posApplyMobileCartCollapsedState() {
-	if (typeof jQuery === 'undefined') {
-		return;
-	}
-	var mq = window.matchMedia('(max-width: 991px) and (orientation: portrait)');
-	var land = window.matchMedia('(max-width: 991px) and (orientation: landscape)');
-	if (!mq.matches && !land.matches) {
-		return;
-	}
-	if (land.matches) {
-		jQuery('body').addClass('pos-mobile-cart-expanded');
-		syncPosMobileCartToggleSummary();
-		return;
-	}
-	try {
-		if (localStorage.getItem('platea_pos_mobile_cart_expanded') === '1') {
-			jQuery('body').addClass('pos-mobile-cart-expanded');
-		} else {
-			jQuery('body').removeClass('pos-mobile-cart-expanded');
-		}
-	} catch (e) {
-		jQuery('body').removeClass('pos-mobile-cart-expanded');
-	}
-	syncPosMobileCartToggleSummary();
-}
 jQuery(document).ready(function () {
 	try {
 		if (localStorage.getItem('platea_pos_hide_nav') === '1') {
@@ -125,20 +71,6 @@ jQuery(document).ready(function () {
 	} catch (e) {}
 	syncPosNavToggleUi();
 	syncPosFullscreenUi();
-	posApplyMobileCartCollapsedState();
-	syncPosMobileCartToggleSummary();
-	jQuery(window).on('resize orientationchange', function () {
-		posApplyMobileCartCollapsedState();
-	});
-	jQuery(document).ajaxComplete(function (_e, _xhr, settings) {
-		if (!settings || !settings.url) {
-			return;
-		}
-		var u = String(settings.url);
-		if (u.indexOf('load_posales') !== -1 || u.indexOf('totiems') !== -1 || u.indexOf('subtot') !== -1) {
-			syncPosMobileCartToggleSummary();
-		}
-	});
 });
 </script>
 <?php if (!$this->session->userdata('register'))
@@ -369,16 +301,6 @@ jQuery(document).ready(function () {
                <input type="text" autofocus id="<?=strval($this->setting->keyboard) === '1' ? 'keyboard' : ''?>" class="form-control barcode" placeholder="<?=label('BarcodeScanner');?>">
             </form>
          </div>
-         <button type="button" class="pos-mobile-cart-toggle btn btn-default btn-block" id="posMobileCartToggle" onclick="togglePosMobileCartPanel(); return false;" aria-expanded="false" aria-controls="posMobileCartLines">
-            <span class="pos-mobile-cart-toggle-row">
-               <i class="fa fa-chevron-down pos-mobile-cart-toggle-icon" aria-hidden="true"></i>
-               <span class="pos-mobile-cart-toggle-text">
-                  <strong class="pos-mobile-cart-toggle-line">—</strong>
-                  <span class="pos-mobile-cart-toggle-hint text-muted small"><?= htmlspecialchars(label('PosMobileCartOpen'), ENT_QUOTES, 'UTF-8'); ?></span>
-               </span>
-            </span>
-         </button>
-         <div class="pos-mobile-cart-lines" id="posMobileCartLines">
          <div class="col-xs-5 table-header">
             <h3><?=label("Product");?></h3>
          </div>
@@ -393,7 +315,6 @@ jQuery(document).ready(function () {
          </div>
          <div id="productList">
             <!-- product List goes here  -->
-         </div>
          </div>
          <div class="footer-section">
             <div class="pos-checkout-dock-row">
@@ -768,7 +689,6 @@ function total_change() {
       $('#TotalModal').text('<?=label("Total");?> '+tot.toFixed(<?=$this->setting->decimals;?>)+' <?=$this->setting->currency;?>');
    }
    updatePosTotalsRowsVisibility();
-   syncPosMobileCartToggleSummary();
 }
 
 

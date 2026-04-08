@@ -209,15 +209,8 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle {
 }
 
 /*
- * POS móvil/tablet: catálogo arriba; en vertical la lista del carrito se pliega y se abre con un botón.
- * En horizontal (~2 columnas): carrito + catálogo lado a lado y la lista siempre visible.
+ * POS móvil/tablet en horizontal: carrito y catálogo en dos columnas.
  */
-@media (min-width: 992px) {
-	.pos-mobile-checkout-layout .pos-mobile-cart-toggle {
-		display: none !important;
-	}
-}
-
 @media (max-width: 991px) {
 	.pos-mobile-checkout-layout > .row {
 		display: flex;
@@ -230,73 +223,7 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle {
 		max-width: 100%;
 	}
 
-	.pos-mobile-cart-toggle {
-		display: block;
-		margin-top: 10px;
-		margin-bottom: 4px;
-		text-align: left;
-		padding: 10px 12px;
-		border-radius: 8px;
-		border: 1px solid rgba(0, 0, 0, 0.12);
-		background: #f8f9fa;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-	}
-	.pos-mobile-cart-toggle-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		width: 100%;
-	}
-	.pos-mobile-cart-toggle-icon {
-		flex-shrink: 0;
-		width: 1.2em;
-		text-align: center;
-		color: #2c7873;
-	}
-	.pos-mobile-cart-toggle-text {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 2px;
-	}
-	.pos-mobile-cart-toggle-line {
-		font-size: 15px;
-		display: block;
-		width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	@media (orientation: portrait) {
-		.pos-mobile-checkout-layout .pos-mobile-cart-lines {
-			max-height: 0;
-			overflow: hidden;
-			opacity: 0;
-			transition: max-height 0.35s ease, opacity 0.2s ease;
-			margin-bottom: 0;
-		}
-		body.pos-mobile-cart-expanded .pos-mobile-checkout-layout .pos-mobile-cart-lines {
-			max-height: min(52vh, 440px);
-			max-height: min(52dvh, 440px);
-			opacity: 1;
-			overflow-y: auto;
-			overflow-x: hidden;
-			-webkit-overflow-scrolling: touch;
-			margin-bottom: 8px;
-		}
-		body.pos-mobile-cart-expanded .pos-mobile-checkout-layout .pos-mobile-cart-lines #productList {
-			max-height: none !important;
-			min-height: 72px;
-		}
-	}
-
 	@media (orientation: landscape) {
-		.pos-mobile-cart-toggle {
-			display: none !important;
-		}
 		.pos-mobile-checkout-layout > .row {
 			flex-wrap: nowrap;
 			align-items: flex-start;
@@ -315,16 +242,12 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle {
 			padding-left: 4px;
 			padding-right: 4px;
 		}
-		.pos-mobile-checkout-layout .pos-mobile-cart-lines {
+		.pos-mobile-checkout-layout #productList {
 			max-height: min(68vh, 420px) !important;
 			max-height: min(68dvh, 420px) !important;
-			opacity: 1 !important;
 			overflow-y: auto !important;
 			overflow-x: hidden;
 			-webkit-overflow-scrolling: touch;
-		}
-		.pos-mobile-checkout-layout .pos-mobile-cart-lines #productList {
-			max-height: none !important;
 		}
 	}
 }
