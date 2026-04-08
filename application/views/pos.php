@@ -105,6 +105,67 @@ function syncPosFullscreenUi() {
 		$a.find('i').toggleClass('fa-expand', !on).toggleClass('fa-compress', on);
 	});
 }
+function syncPosMobileClientToggleUi() {
+	if (typeof jQuery === 'undefined') {
+		return;
+	}
+	if (!jQuery('#posMobileClientToggle').length) {
+		return;
+	}
+	var c = jQuery('#customerSelect option:selected').text().trim() || '—';
+	var w = jQuery('#WaiterName option:selected').text().trim() || '—';
+	if (c.length > 26) {
+		c = c.slice(0, 26) + '…';
+	}
+	if (w.length > 22) {
+		w = w.slice(0, 22) + '…';
+	}
+	jQuery('.pos-mobile-client-toggle-summary').text(c + ' · ' + w);
+	var expanded = jQuery('body').hasClass('pos-mobile-client-expanded');
+	var openL = <?= json_encode(label('PosMobileClientOpen')); ?>;
+	var closeL = <?= json_encode(label('PosMobileClientClose')); ?>;
+	jQuery('.pos-mobile-client-toggle-hint').text(expanded ? closeL : openL);
+	var $btn = jQuery('#posMobileClientToggle');
+	$btn.attr('aria-expanded', expanded ? 'true' : 'false');
+	$btn.find('.pos-mobile-client-toggle-icon').toggleClass('fa-chevron-down', !expanded).toggleClass('fa-chevron-up', expanded);
+}
+function togglePosMobileClientPanel(evt) {
+	if (evt && evt.preventDefault) {
+		evt.preventDefault();
+	}
+	if (evt && evt.stopPropagation) {
+		evt.stopPropagation();
+	}
+	jQuery('body').toggleClass('pos-mobile-client-expanded');
+	try {
+		localStorage.setItem('platea_pos_client_panel_expanded', jQuery('body').hasClass('pos-mobile-client-expanded') ? '1' : '0');
+	} catch (e) {}
+	syncPosMobileClientToggleUi();
+	return false;
+}
+function posApplyMobileClientPanelState() {
+	if (typeof jQuery === 'undefined') {
+		return;
+	}
+	if (!jQuery('#posMobileClientToggle').length) {
+		return;
+	}
+	if (!window.matchMedia('(max-width: 1080px)').matches) {
+		jQuery('body').removeClass('pos-mobile-client-expanded');
+		syncPosMobileClientToggleUi();
+		return;
+	}
+	try {
+		if (localStorage.getItem('platea_pos_client_panel_expanded') === '1') {
+			jQuery('body').addClass('pos-mobile-client-expanded');
+		} else {
+			jQuery('body').removeClass('pos-mobile-client-expanded');
+		}
+	} catch (e) {
+		jQuery('body').removeClass('pos-mobile-client-expanded');
+	}
+	syncPosMobileClientToggleUi();
+}
 (function () {
 	function onFsChange() {
 		if (typeof jQuery !== 'undefined') {
@@ -131,6 +192,11 @@ jQuery(document).ready(function () {
 	} catch (e) {}
 	syncPosNavToggleUi();
 	syncPosFullscreenUi();
+	posApplyMobileClientPanelState();
+	syncPosMobileClientToggleUi();
+	jQuery(window).on('resize orientationchange', function () {
+		posApplyMobileClientPanelState();
+	});
 });
 </script>
 <?php if (!$this->session->userdata('register'))
@@ -321,6 +387,16 @@ jQuery(document).ready(function () {
                <span class="Hold pl" onclick="RemoveHold()">-</span>
             </div>
          </div>
+         <button type="button" class="pos-mobile-client-toggle btn btn-default btn-block" id="posMobileClientToggle" onclick="return togglePosMobileClientPanel(event);" aria-expanded="false" aria-controls="posMobileClientPanel">
+            <span class="pos-mobile-client-toggle-row">
+               <i class="fa fa-chevron-down pos-mobile-client-toggle-icon" aria-hidden="true"></i>
+               <span class="pos-mobile-client-toggle-text">
+                  <strong class="pos-mobile-client-toggle-summary"></strong>
+                  <span class="pos-mobile-client-toggle-hint text-muted small"><?= htmlspecialchars(label('PosMobileClientOpen'), ENT_QUOTES, 'UTF-8'); ?></span>
+               </span>
+            </span>
+         </button>
+         <div class="pos-mobile-client-panel clearfix" id="posMobileClientPanel">
          <div class="col-xs-8">
             <h2><?=label("ChooseClient");?></h2>
          </div>
@@ -355,6 +431,7 @@ jQuery(document).ready(function () {
               <?php endforeach;?>
             </select>
             <span class="hidden" id="waiterS"></span>
+         </div>
          </div>
          <div class="col-sm-12">
             <form onsubmit="return barcode()">
@@ -479,10 +556,12 @@ $(document).ready(function() {
       $('#waiterS').load("<?php echo site_url('pos/WaiterName')?>/"+holdi, function(){
          var res = $('#waiterS').text();
          if(res>0) {$('#WaiterName').val(res).trigger("change");}else{$('#WaiterName').val(0).trigger("change");}
+         if (typeof syncPosMobileClientToggleUi === 'function') { syncPosMobileClientToggleUi(); }
       });
       $('#customerS').load("<?php echo site_url('pos/CustomerName')?>/"+holdi, function(){
          var res = $('#customerS').text();
          if(res>0) {$('#customerSelect').val(res).trigger("change");}else{$('#customerSelect').val(0).trigger("change");}
+         if (typeof syncPosMobileClientToggleUi === 'function') { syncPosMobileClientToggleUi(); }
       });
    });
 
@@ -499,6 +578,7 @@ $(document).ready(function() {
             alert("error");
          }
      });
+     if (typeof syncPosMobileClientToggleUi === 'function') { syncPosMobileClientToggleUi(); }
    });
 
    $("#customerSelect").on('change', function(){
@@ -514,6 +594,7 @@ $(document).ready(function() {
             alert("error");
          }
      });
+     if (typeof syncPosMobileClientToggleUi === 'function') { syncPosMobileClientToggleUi(); }
    });
 
 

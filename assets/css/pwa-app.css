@@ -258,3 +258,73 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 		}
 	}
 }
+
+/* POS: bloque «Elegir cliente» colapsable si ancho ≤1080px (retrato y apaisado; por defecto oculto) */
+@media (min-width: 1081px) {
+	.pos-mobile-checkout-layout .pos-mobile-client-toggle {
+		display: none !important;
+	}
+	.pos-mobile-checkout-layout .pos-mobile-client-panel {
+		max-height: none !important;
+		opacity: 1 !important;
+		overflow: visible !important;
+	}
+}
+
+@media (max-width: 1080px) {
+	.pos-mobile-checkout-layout .pos-mobile-client-toggle {
+		display: block;
+		margin-top: 6px;
+		margin-bottom: 8px;
+		text-align: left;
+		padding: 0 !important;
+		border-radius: 8px;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		background: #f8f9fa;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.pos-mobile-client-toggle-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+	}
+	.pos-mobile-client-toggle-icon {
+		flex-shrink: 0;
+		width: 1.2em;
+		text-align: center;
+		color: #2c7873;
+	}
+	.pos-mobile-client-toggle-text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+	}
+	.pos-mobile-client-toggle-summary {
+		font-size: 14px;
+		display: block;
+		width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.pos-mobile-checkout-layout .pos-mobile-client-panel {
+		max-height: 0;
+		overflow: hidden;
+		opacity: 0;
+		transition: max-height 0.35s ease, opacity 0.2s ease;
+		margin-bottom: 0;
+	}
+	body.pos-mobile-client-expanded .pos-mobile-checkout-layout .pos-mobile-client-panel {
+		max-height: 560px;
+		opacity: 1;
+		overflow: visible;
+		margin-bottom: 8px;
+	}
+}
