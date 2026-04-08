@@ -31,6 +31,13 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle {
 	display: none !important;
 }
 
+/* Pantalla completa POS: sin tooltip Bootstrap (en Chrome móvil el tooltip flotaba mal); mejor toque directo */
+ul.cbp-vimenu .pos-fullscreen-toggle a,
+ul.cbp-vimenu2 .pos-fullscreen-toggle a {
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
 @media (max-width: 1400px) {
 	ul.cbp-vimenu .pos-floating-nav-toggle,
 	ul.cbp-vimenu2 .pos-floating-nav-toggle,

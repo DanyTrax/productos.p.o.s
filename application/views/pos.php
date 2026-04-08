@@ -26,20 +26,69 @@ function syncPosNavToggleUi() {
 function posGetFullscreenElement() {
 	return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
 }
-function togglePosFullscreen() {
+function togglePosFullscreen(evt) {
+	if (evt && evt.preventDefault) {
+		evt.preventDefault();
+	}
+	if (evt && evt.stopPropagation) {
+		evt.stopPropagation();
+	}
 	var docEl = document.documentElement;
 	var active = posGetFullscreenElement();
-	if (!active) {
-		var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
-		if (req) {
-			req.call(docEl).catch(function () {});
-		}
-	} else {
+	var unavailable = <?= json_encode(label('PosFullscreenUnavailable')); ?>;
+	if (active) {
 		var ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
 		if (ex) {
-			ex.call(document);
+			try {
+				var xp = ex.call(document);
+				if (xp && typeof xp.then === 'function') {
+					xp.then(function () { syncPosFullscreenUi(); }).catch(function () { syncPosFullscreenUi(); });
+				} else {
+					window.setTimeout(syncPosFullscreenUi, 120);
+				}
+			} catch (err) {
+				syncPosFullscreenUi();
+			}
+		}
+		return false;
+	}
+	var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+	if (!req) {
+		if (unavailable) {
+			window.alert(unavailable);
+		}
+		return false;
+	}
+	var p;
+	try {
+		p = req.call(docEl, { navigationUI: 'hide' });
+	} catch (e1) {
+		try {
+			p = req.call(docEl);
+		} catch (e2) {
+			p = null;
 		}
 	}
+	if (p && typeof p.then === 'function') {
+		p.then(function () {
+			syncPosFullscreenUi();
+		}).catch(function () {
+			syncPosFullscreenUi();
+			window.setTimeout(function () {
+				if (!posGetFullscreenElement() && unavailable) {
+					window.alert(unavailable);
+				}
+			}, 200);
+		});
+	} else {
+		window.setTimeout(function () {
+			syncPosFullscreenUi();
+			if (!posGetFullscreenElement() && unavailable) {
+				window.alert(unavailable);
+			}
+		}, 250);
+	}
+	return false;
 }
 function syncPosFullscreenUi() {
 	if (typeof jQuery === 'undefined') {
@@ -48,9 +97,12 @@ function syncPosFullscreenUi() {
 	var on = !!posGetFullscreenElement();
 	var enterT = <?= json_encode(label('PosFullscreen')); ?>;
 	var exitT = <?= json_encode(label('PosFullscreenExit')); ?>;
+	var t = on ? exitT : enterT;
 	jQuery('.pos-fullscreen-toggle a').each(function () {
-		jQuery(this).attr('title', on ? exitT : enterT);
-		jQuery(this).find('i').toggleClass('fa-expand', !on).toggleClass('fa-compress', on);
+		var $a = jQuery(this);
+		$a.attr('title', t);
+		$a.attr('aria-label', t);
+		$a.find('i').toggleClass('fa-expand', !on).toggleClass('fa-compress', on);
 	});
 }
 (function () {
@@ -64,6 +116,14 @@ function syncPosFullscreenUi() {
 	document.addEventListener('MSFullscreenChange', onFsChange);
 })();
 jQuery(document).ready(function () {
+	jQuery('.pos-fullscreen-toggle').each(function () {
+		var $li = jQuery(this);
+		if ($li.data('bs.tooltip')) {
+			try {
+				$li.tooltip('destroy');
+			} catch (e) {}
+		}
+	});
 	try {
 		if (localStorage.getItem('platea_pos_hide_nav') === '1') {
 			jQuery('body').addClass('pos-hide-main-nav');
@@ -209,7 +269,7 @@ jQuery(document).ready(function () {
       <div class="container">
          <ul class="cbp-vimenu">
          	<li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
-         	<li class="pos-fullscreen-toggle" data-toggle="tooltip" data-html="true" data-placement="left" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><a href="javascript:void(0)" onclick="togglePosFullscreen(); return false;"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
+         	<li class="pos-fullscreen-toggle"><a href="javascript:void(0)" role="button" onclick="return togglePosFullscreen(event);" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('CloseRegister');?>"><a href="javascript:void(0)" onclick="CloseRegister()"><i class="fa fa-times" aria-hidden="true"></i></a></li>
           <li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('SwitchStore');?>"><a href="pos/switshregister"><i class="fa fa-random" aria-hidden="true"></i></a></li>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Kitchenpage');?>"><a href="kitchens"><i class="fa fa-cutlery" aria-hidden="true"></i></a></li>
@@ -246,7 +306,7 @@ jQuery(document).ready(function () {
    <div class="row">
       <ul class="cbp-vimenu2">
       	<li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
-      	<li class="pos-fullscreen-toggle" data-toggle="tooltip" data-html="true" data-placement="left" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><a href="javascript:void(0)" onclick="togglePosFullscreen(); return false;"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
+      	<li class="pos-fullscreen-toggle"><a href="javascript:void(0)" role="button" onclick="return togglePosFullscreen(event);" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
       	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('CancelAll');?>"><a href="javascript:void(0)" onclick="CloseTable()"><i class="fa fa-times" aria-hidden="true"></i></a></li>
       	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Return');?>"><a href="pos/switshtable"><i class="fa fa-reply" aria-hidden="true"></i></a></li>
         <li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Kitchenpage');?>"><a href="kitchens"><i class="fa fa-cutlery" aria-hidden="true"></i></a></li>

@@ -44,6 +44,7 @@ $lang['PosNavHide'] = "Hide top menu";
 $lang['PosNavShow'] = "Show top menu";
 $lang['PosFullscreen'] = "Fullscreen (like F11)";
 $lang['PosFullscreenExit'] = "Exit fullscreen";
+$lang['PosFullscreenUnavailable'] = "Fullscreen is not available here. On your phone, use Chrome’s menu (⋮) and choose “Fullscreen” or “Add to Home screen”.";
 $lang['Product'] = "Product";
 $lang['Setting'] = "Setting";
 $lang['Categories'] = "Categories";

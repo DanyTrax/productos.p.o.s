@@ -44,6 +44,7 @@ $lang['PosNavHide'] = "Ocultar menú superior";
 $lang['PosNavShow'] = "Mostrar menú superior";
 $lang['PosFullscreen'] = "Pantalla completa (como F11)";
 $lang['PosFullscreenExit'] = "Salir de pantalla completa";
+$lang['PosFullscreenUnavailable'] = "No se pudo usar pantalla completa. En el móvil, abre el menú de Chrome (⋮) y elige «Pantalla completa» o «Añadir a la pantalla de inicio».";
 $lang['Product'] = "Productos";
 $lang['Setting'] = "Ajustes";
 $lang['Categories'] = "Categorias";
