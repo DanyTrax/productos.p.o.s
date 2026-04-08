@@ -23,6 +23,46 @@ function syncPosNavToggleUi() {
 	});
 	jQuery('.pos-nav-toggle-float i').toggleClass('fa-chevron-up', !hidden).toggleClass('fa-chevron-down', hidden);
 }
+function posGetFullscreenElement() {
+	return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+}
+function togglePosFullscreen() {
+	var docEl = document.documentElement;
+	var active = posGetFullscreenElement();
+	if (!active) {
+		var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+		if (req) {
+			req.call(docEl).catch(function () {});
+		}
+	} else {
+		var ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+		if (ex) {
+			ex.call(document);
+		}
+	}
+}
+function syncPosFullscreenUi() {
+	if (typeof jQuery === 'undefined') {
+		return;
+	}
+	var on = !!posGetFullscreenElement();
+	var enterT = <?= json_encode(label('PosFullscreen')); ?>;
+	var exitT = <?= json_encode(label('PosFullscreenExit')); ?>;
+	jQuery('.pos-fullscreen-toggle a').each(function () {
+		jQuery(this).attr('title', on ? exitT : enterT);
+		jQuery(this).find('i').toggleClass('fa-expand', !on).toggleClass('fa-compress', on);
+	});
+}
+(function () {
+	function onFsChange() {
+		if (typeof jQuery !== 'undefined') {
+			syncPosFullscreenUi();
+		}
+	}
+	document.addEventListener('fullscreenchange', onFsChange);
+	document.addEventListener('webkitfullscreenchange', onFsChange);
+	document.addEventListener('MSFullscreenChange', onFsChange);
+})();
 jQuery(document).ready(function () {
 	try {
 		if (localStorage.getItem('platea_pos_hide_nav') === '1') {
@@ -30,6 +70,7 @@ jQuery(document).ready(function () {
 		}
 	} catch (e) {}
 	syncPosNavToggleUi();
+	syncPosFullscreenUi();
 });
 </script>
 <?php if (!$this->session->userdata('register'))
@@ -168,6 +209,7 @@ jQuery(document).ready(function () {
       <div class="container">
          <ul class="cbp-vimenu">
          	<li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
+         	<li class="pos-fullscreen-toggle" data-toggle="tooltip" data-html="true" data-placement="left" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><a href="javascript:void(0)" onclick="togglePosFullscreen(); return false;"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('CloseRegister');?>"><a href="javascript:void(0)" onclick="CloseRegister()"><i class="fa fa-times" aria-hidden="true"></i></a></li>
           <li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('SwitchStore');?>"><a href="pos/switshregister"><i class="fa fa-random" aria-hidden="true"></i></a></li>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Kitchenpage');?>"><a href="kitchens"><i class="fa fa-cutlery" aria-hidden="true"></i></a></li>
@@ -204,6 +246,7 @@ jQuery(document).ready(function () {
    <div class="row">
       <ul class="cbp-vimenu2">
       	<li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
+      	<li class="pos-fullscreen-toggle" data-toggle="tooltip" data-html="true" data-placement="left" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><a href="javascript:void(0)" onclick="togglePosFullscreen(); return false;"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
       	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('CancelAll');?>"><a href="javascript:void(0)" onclick="CloseTable()"><i class="fa fa-times" aria-hidden="true"></i></a></li>
       	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Return');?>"><a href="pos/switshtable"><i class="fa fa-reply" aria-hidden="true"></i></a></li>
         <li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Kitchenpage');?>"><a href="kitchens"><i class="fa fa-cutlery" aria-hidden="true"></i></a></li>

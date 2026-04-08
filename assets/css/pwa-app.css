@@ -25,13 +25,17 @@ html.web-app-prefer body {
  * Oculto en pantallas muy anchas; visible al reducir ventana (escritorio) o en tablet/móvil.
  */
 ul.cbp-vimenu .pos-floating-nav-toggle,
-ul.cbp-vimenu2 .pos-floating-nav-toggle {
+ul.cbp-vimenu2 .pos-floating-nav-toggle,
+ul.cbp-vimenu .pos-fullscreen-toggle,
+ul.cbp-vimenu2 .pos-fullscreen-toggle {
 	display: none !important;
 }
 
 @media (max-width: 1400px) {
 	ul.cbp-vimenu .pos-floating-nav-toggle,
-	ul.cbp-vimenu2 .pos-floating-nav-toggle {
+	ul.cbp-vimenu2 .pos-floating-nav-toggle,
+	ul.cbp-vimenu .pos-fullscreen-toggle,
+	ul.cbp-vimenu2 .pos-fullscreen-toggle {
 		display: list-item !important;
 	}
 	body.pos-hide-main-nav .navbar.navbar-fixed-top {
@@ -82,8 +86,9 @@ ul.cbp-vimenu2 .pos-floating-nav-toggle {
 	width: 100%;
 }
 
+/* ~70% totales / ~30% botones (proporción flex 7:3 respecto al ancho disponible) */
 .pos-mobile-checkout-layout .pos-checkout-dock-totals {
-	flex: 1 1 auto;
+	flex: 7 1 0;
 	min-width: 0;
 }
 
@@ -96,35 +101,34 @@ ul.cbp-vimenu2 .pos-floating-nav-toggle {
 }
 
 .pos-mobile-checkout-layout .pos-checkout-dock-totals .table > tbody > tr > td {
-	padding: 5px 8px;
-	font-size: 13px;
+	padding: 7px 10px;
+	font-size: 15px;
 	vertical-align: middle;
 }
 
 .pos-mobile-checkout-layout .pos-checkout-dock-buttons {
-	flex: 0 0 auto;
+	flex: 3 1 0;
+	min-width: 0;
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 6px 8px;
+	gap: 8px 10px;
 	align-content: center;
-	width: clamp(150px, 26vw, 260px);
-	max-width: 42%;
 }
 
 .pos-mobile-checkout-layout .pos-dock-action-btn {
-	min-height: 0 !important;
+	min-height: 52px !important;
 	height: auto !important;
-	padding: 10px 6px !important;
+	padding: 12px 8px !important;
 	margin: 0 !important;
 	white-space: normal;
-	line-height: 1.15;
-	border-radius: 4px;
+	line-height: 1.2;
+	border-radius: 6px;
 }
 
 .pos-mobile-checkout-layout .pos-dock-action-label {
 	display: block;
 	font-weight: 700;
-	font-size: 10px;
+	font-size: 12px;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
 	word-break: break-word;
@@ -157,22 +161,21 @@ ul.cbp-vimenu2 .pos-floating-nav-toggle {
 
 @media (max-width: 991px) {
 	.pos-mobile-checkout-layout .pos-checkout-dock-totals .table > tbody > tr > td {
-		padding: 5px 6px;
-		font-size: 12px;
+		padding: 6px 8px;
+		font-size: 13px;
 	}
 
 	.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
-		width: clamp(130px, 34vw, 220px);
-		max-width: 46%;
-		gap: 5px 6px;
+		gap: 6px 8px;
 	}
 
 	.pos-mobile-checkout-layout .pos-dock-action-btn {
-		padding: 8px 4px !important;
+		min-height: 48px !important;
+		padding: 10px 6px !important;
 	}
 
 	.pos-mobile-checkout-layout .pos-dock-action-label {
-		font-size: 9px;
+		font-size: 11px;
 	}
 
 	.pos-mobile-checkout-layout {
@@ -185,14 +188,22 @@ ul.cbp-vimenu2 .pos-floating-nav-toggle {
 	}
 }
 
-@media (max-width: 400px) {
+@media (max-width: 360px) {
+	.pos-mobile-checkout-layout .pos-checkout-dock-totals,
+	.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
+		max-width: none;
+	}
+
 	.pos-mobile-checkout-layout .pos-checkout-dock-row {
 		flex-wrap: wrap;
 	}
 
+	.pos-mobile-checkout-layout .pos-checkout-dock-totals {
+		flex: 1 1 100%;
+	}
+
 	.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
-		width: 100%;
-		max-width: none;
+		flex: 1 1 100%;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
