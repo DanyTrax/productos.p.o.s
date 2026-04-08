@@ -1,0 +1,17 @@
+# CodeIgniter
+application/logs/*.php
+!application/logs/index.html
+application/cache/*
+!application/cache/.htaccess
+!application/cache/index.html
+
+# Windows / editor
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Cursor (opcional)
+.cursor/

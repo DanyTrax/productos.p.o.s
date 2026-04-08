@@ -1,0 +1,198 @@
+/**
+ * Estilos cuando la app se abre como PWA (standalone) o modo app preferido.
+ */
+@media (display-mode: standalone) {
+	body {
+		padding-top: env(safe-area-inset-top, 0px);
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+	}
+	.navbar-fixed-top {
+		top: env(safe-area-inset-top, 0px);
+	}
+}
+
+html.web-app-prefer .navbar-fixed-top {
+	top: env(safe-area-inset-top, 0px);
+}
+
+html.web-app-prefer body {
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+
+/*
+ * Botón flotante "ocultar menú" en POS:
+ * Oculto en pantallas muy anchas; visible al reducir ventana (escritorio) o en tablet/móvil.
+ */
+ul.cbp-vimenu .pos-floating-nav-toggle,
+ul.cbp-vimenu2 .pos-floating-nav-toggle {
+	display: none !important;
+}
+
+@media (max-width: 1400px) {
+	ul.cbp-vimenu .pos-floating-nav-toggle,
+	ul.cbp-vimenu2 .pos-floating-nav-toggle {
+		display: list-item !important;
+	}
+	body.pos-hide-main-nav .navbar.navbar-fixed-top {
+		transform: translateY(-100%);
+		visibility: hidden;
+		pointer-events: none;
+		transition: transform 0.25s ease, visibility 0.25s;
+	}
+	body.pos-hide-main-nav {
+		padding-top: 12px;
+	}
+	body.pos-hide-main-nav .cbp-vimenu,
+	body.pos-hide-main-nav .cbp-vimenu2 {
+		top: 12px;
+	}
+	/* Franja del título (ej. "Cliente sin Registrar") bajo el menú oculto */
+	body.pos-hide-main-nav .pos-context-header {
+		display: none !important;
+	}
+}
+
+/*
+ * POS (navegador ancho o móvil): totales + botones fijos al pie del viewport; carrito con scroll.
+ */
+.pos-mobile-checkout-layout .footer-section {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	max-width: 100%;
+	z-index: 1025;
+	background-color: inherit;
+	border-top: 2px solid rgba(0, 0, 0, 0.1);
+	box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.14);
+	padding: 8px 12px;
+	padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+	margin: 0 !important;
+	box-sizing: border-box;
+}
+
+/* Fila: totales a la izquierda, dos botones compactos en 2 columnas a la derecha */
+.pos-mobile-checkout-layout .footer-section .pos-checkout-dock-row {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	gap: 12px;
+	width: 100%;
+}
+
+.pos-mobile-checkout-layout .pos-checkout-dock-totals {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.pos-mobile-checkout-layout .pos-checkout-dock-totals .totalTab {
+	margin-bottom: 0;
+}
+
+.pos-mobile-checkout-layout .pos-checkout-dock-totals .table {
+	margin-bottom: 0;
+}
+
+.pos-mobile-checkout-layout .pos-checkout-dock-totals .table > tbody > tr > td {
+	padding: 5px 8px;
+	font-size: 13px;
+	vertical-align: middle;
+}
+
+.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
+	flex: 0 0 auto;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 6px 8px;
+	align-content: center;
+	width: clamp(150px, 26vw, 260px);
+	max-width: 42%;
+}
+
+.pos-mobile-checkout-layout .pos-dock-action-btn {
+	min-height: 0 !important;
+	height: auto !important;
+	padding: 10px 6px !important;
+	margin: 0 !important;
+	white-space: normal;
+	line-height: 1.15;
+	border-radius: 4px;
+}
+
+.pos-mobile-checkout-layout .pos-dock-action-label {
+	display: block;
+	font-weight: 700;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	word-break: break-word;
+}
+
+.pos-mobile-checkout-layout {
+	padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+}
+
+.pos-mobile-checkout-layout .left-side {
+	margin-bottom: 0 !important;
+	padding-bottom: 8px;
+}
+
+.pos-mobile-checkout-layout #productList {
+	max-height: clamp(120px, calc(100vh - 340px), min(55vh, 520px));
+	max-height: clamp(120px, calc(100dvh - 340px), min(55vh, 520px));
+	min-height: 100px;
+	overflow-y: auto !important;
+	overflow-x: hidden;
+	-webkit-overflow-scrolling: touch;
+	width: 100% !important;
+}
+
+.pos-mobile-checkout-layout #productList2 {
+	overflow: visible !important;
+	height: auto !important;
+	max-height: none !important;
+}
+
+@media (max-width: 991px) {
+	.pos-mobile-checkout-layout .pos-checkout-dock-totals .table > tbody > tr > td {
+		padding: 5px 6px;
+		font-size: 12px;
+	}
+
+	.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
+		width: clamp(130px, 34vw, 220px);
+		max-width: 46%;
+		gap: 5px 6px;
+	}
+
+	.pos-mobile-checkout-layout .pos-dock-action-btn {
+		padding: 8px 4px !important;
+	}
+
+	.pos-mobile-checkout-layout .pos-dock-action-label {
+		font-size: 9px;
+	}
+
+	.pos-mobile-checkout-layout {
+		padding-bottom: calc(190px + env(safe-area-inset-bottom, 0px));
+	}
+
+	.pos-mobile-checkout-layout #productList {
+		max-height: min(42vh, 280px);
+		max-height: min(42dvh, 280px);
+	}
+}
+
+@media (max-width: 400px) {
+	.pos-mobile-checkout-layout .pos-checkout-dock-row {
+		flex-wrap: wrap;
+	}
+
+	.pos-mobile-checkout-layout .pos-checkout-dock-buttons {
+		width: 100%;
+		max-width: none;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
