@@ -288,6 +288,25 @@
                   <br><small class="text-muted"><?= sprintf(label("SystemCachePurgeDetail"), $_n, $_oc ? label("SystemCacheOpcacheYes") : label("SystemCacheOpcacheNo")); ?></small>
                </div>
                <?php } ?>
+               <?php
+               $_su = $this->session->flashdata('sql_update_result');
+               if (is_array($_su)) {
+                   $_a = isset($_su['applied']) ? (int) $_su['applied'] : 0;
+                   $_i = isset($_su['ignored']) ? (int) $_su['ignored'] : 0;
+                   $_f = isset($_su['failed']) ? (int) $_su['failed'] : 0;
+               ?>
+               <div class="alert <?= $_f > 0 ? 'alert-warning' : 'alert-success'; ?>">
+                  <?=label("SystemSqlUpdateDone");?>
+                  <br><small class="text-muted"><?= sprintf(label("SystemSqlUpdateDetail"), $_a, $_i, $_f); ?></small>
+                  <?php if (! empty($_su['messages']) && is_array($_su['messages'])) { ?>
+                     <ul class="small text-muted" style="margin-top:8px;">
+                        <?php foreach ($_su['messages'] as $_m) { ?>
+                           <li><?= htmlspecialchars($_m, ENT_QUOTES, 'UTF-8'); ?></li>
+                        <?php } ?>
+                     </ul>
+                  <?php } ?>
+               </div>
+               <?php } ?>
                <div class="well">
                   <h4><?=label("SystemCacheTitle");?></h4>
                   <p><?=label("SystemCacheDesc");?></p>
@@ -299,6 +318,19 @@
                   <?php echo form_open('settings/purgeCache'); ?>
                   <button type="submit" class="btn btn-warning" onclick="return confirm('<?= htmlspecialchars(label('SystemCachePurgeConfirm'), ENT_QUOTES, 'UTF-8'); ?>');">
                      <i class="fa fa-trash" aria-hidden="true"></i> <?=label("SystemCachePurgeBtn");?>
+                  </button>
+                  <?php echo form_close(); ?>
+               </div>
+               <div class="well">
+                  <h4><?=label("SystemSqlUpdateTitle");?></h4>
+                  <p><?=label("SystemSqlUpdateDesc");?></p>
+                  <ul class="text-muted small">
+                     <li><?=label("SystemSqlUpdateBulletOnline");?></li>
+                     <li><?=label("SystemSqlUpdateBulletSafe");?></li>
+                  </ul>
+                  <?php echo form_open('settings/applySqlUpdates'); ?>
+                  <button type="submit" class="btn btn-primary" onclick="return confirm('<?= htmlspecialchars(label('SystemSqlUpdateConfirm'), ENT_QUOTES, 'UTF-8'); ?>');">
+                     <i class="fa fa-database" aria-hidden="true"></i> <?=label("SystemSqlUpdateBtn");?>
                   </button>
                   <?php echo form_close(); ?>
                </div>
@@ -412,6 +444,23 @@
                     </select>
 
             </div>
+            <div class="form-group" id="waiterPermissions" style="display:none;">
+              <label>Permisos de caja (camarero)</label>
+              <div class="checkbox">
+                <label>
+                  <input type="hidden" name="can_open_register" value="0">
+                  <input type="checkbox" name="can_open_register" value="1">
+                  Permitir apertura de tienda/caja en POS
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="hidden" name="can_close_register" value="0">
+                  <input type="checkbox" name="can_close_register" value="1">
+                  Permitir cierre de caja en POS
+                </label>
+              </div>
+            </div>
            <div class="form-group">
              <label for="email"><?=label("Email");?></label>
              <input type="email" name="email" class="form-control" id="email" placeholder="<?=label("Email");?>">
@@ -497,14 +546,25 @@ $(document).ready(function () {
 
 $("#Storeslist").slideUp();
 
-$('input[type=radio][name=role]').on('change', function() {
-  if( this.value == "waiter" || this.value == "kitchen" ) //if waiter or kitchen
-  {
+function toggleWaiterFieldsByRole(roleValue) {
+  var isStoreRole = (roleValue === "waiter" || roleValue === "kitchen");
+  var isWaiterRole = (roleValue === "waiter");
+  if (isStoreRole) {
     $("#Storeslist").slideDown();
   } else {
-     $("#Storeslist").slideUp();
+    $("#Storeslist").slideUp();
   }
+  if (isWaiterRole) {
+    $("#waiterPermissions").slideDown();
+  } else {
+    $("#waiterPermissions").slideUp();
+  }
+}
+
+$('input[type=radio][name=role]').on('change', function() {
+  toggleWaiterFieldsByRole(this.value);
 });
+toggleWaiterFieldsByRole($('input[type=radio][name=role]:checked').val());
 
 });
 $('.collapse').collapse()

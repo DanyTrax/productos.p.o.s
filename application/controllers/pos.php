@@ -20,6 +20,55 @@ class Pos extends CI_Controller
         date_default_timezone_set($this->setting->timezone);
     }
 
+    /**
+     * @return User|null
+     */
+    private function current_user()
+    {
+        $uid = (int) $this->session->userdata('user_id');
+        if ($uid < 1) {
+            return null;
+        }
+
+        return User::find_by_id($uid);
+    }
+
+    /**
+     * Admin/sales siempre pueden abrir; camarero depende del switch.
+     */
+    private function user_can_open_register($user)
+    {
+        if (! $user) {
+            return false;
+        }
+        if ($user->role === 'admin' || $user->role === 'sales') {
+            return true;
+        }
+        if ($user->role === 'waiter') {
+            return isset($user->can_open_register) && strval($user->can_open_register) === '1';
+        }
+
+        return false;
+    }
+
+    /**
+     * Admin/sales siempre pueden cerrar; camarero depende del switch.
+     */
+    private function user_can_close_register($user)
+    {
+        if (! $user) {
+            return false;
+        }
+        if ($user->role === 'admin' || $user->role === 'sales') {
+            return true;
+        }
+        if ($user->role === 'waiter') {
+            return isset($user->can_close_register) && strval($user->can_close_register) === '1';
+        }
+
+        return false;
+    }
+
     public function findproduct($code)
     {
         $product = Product::find('first', array(
@@ -33,7 +82,17 @@ class Pos extends CI_Controller
 
     public function openregister($id = 0, $userRole = '')
     {
+        $user = $this->current_user();
+        $canOpenRegister = $this->user_can_open_register($user);
         if ($_POST) {
+            if (! $canOpenRegister) {
+                $this->output->set_status_header(403);
+                echo json_encode(array(
+                    'status' => false,
+                    'message' => 'No tiene permiso para apertura de caja',
+                ));
+                return;
+            }
             $cash = $this->input->post('cash');
             $id = $this->input->post('store');
             $waitersCach = $this->input->post('waitersCach');
@@ -72,6 +131,10 @@ class Pos extends CI_Controller
         if ($open_reg) {
             $CI->session->set_userdata('register', $open_reg->id);
         } else {
+            if (! $canOpenRegister) {
+                redirect("", "location");
+                return;
+            }
             $CI->session->set_userdata('register', 0);
         }
         $CI->session->set_userdata('store', $id);
@@ -890,6 +953,15 @@ class Pos extends CI_Controller
      */
      public function CloseRegister()
      {
+         $currentUser = $this->current_user();
+         if (! $this->user_can_close_register($currentUser)) {
+             $this->output->set_status_header(403);
+             echo json_encode(array(
+                 'status' => false,
+                 'message' => 'No tiene permiso para cierre de caja',
+             ));
+             return;
+         }
          $register = Register::find($this->register);
          $user = User::find($register->user_id);
          $sales = Sale::find('all', array(
@@ -1029,6 +1101,16 @@ class Pos extends CI_Controller
     {
         $this->output->set_content_type('application/json');
         try {
+            $currentUser = $this->current_user();
+            if (! $this->user_can_close_register($currentUser)) {
+                $this->output->set_status_header(403);
+                echo json_encode(array(
+                    'status' => false,
+                    'message' => 'No tiene permiso para cierre de caja',
+                ));
+
+                return;
+            }
             if (! $this->register) {
                 $this->output->set_status_header(400);
                 echo json_encode(array(

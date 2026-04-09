@@ -41,6 +41,23 @@
                     </select>
 
             </div>
+            <div class="form-group" id="waiterPermissions">
+              <label>Permisos de caja (camarero)</label>
+              <div class="checkbox">
+                <label>
+                  <input type="hidden" name="can_open_register" value="0">
+                  <input type="checkbox" name="can_open_register" value="1" <?=isset($user->can_open_register) && strval($user->can_open_register) === '1' ? 'checked' : '';?>>
+                  Permitir apertura de tienda/caja en POS
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="hidden" name="can_close_register" value="0">
+                  <input type="checkbox" name="can_close_register" value="1" <?=isset($user->can_close_register) && strval($user->can_close_register) === '1' ? 'checked' : '';?>>
+                  Permitir cierre de caja en POS
+                </label>
+              </div>
+            </div>
            <div class="form-group">
              <label for="email"><?=label("Email");?></label>
              <input type="email" name="email" value="<?=$user->email?>" class="form-control" id="email" placeholder="<?=label("Email");?>">
@@ -71,14 +88,25 @@ $(document).ready(function () {
 
 <?=$user->role==='admin' || $user->role==='sales' ? '$("#Storeslist").slideUp();' : '';?>
 
-$('input[type=radio][name=role]').on('change', function() {
-  if( this.value == "waiter" || this.value == "kitchen" ) //if waiter or kitchen
-  {
+function toggleWaiterFieldsByRole(roleValue) {
+  var isStoreRole = (roleValue === "waiter" || roleValue === "kitchen");
+  var isWaiterRole = (roleValue === "waiter");
+  if (isStoreRole) {
     $("#Storeslist").slideDown();
   } else {
-     $("#Storeslist").slideUp();
+    $("#Storeslist").slideUp();
   }
+  if (isWaiterRole) {
+    $("#waiterPermissions").slideDown();
+  } else {
+    $("#waiterPermissions").slideUp();
+  }
+}
+
+$('input[type=radio][name=role]').on('change', function() {
+  toggleWaiterFieldsByRole(this.value);
 });
+toggleWaiterFieldsByRole($('input[type=radio][name=role]:checked').val());
 
 });
 </script>

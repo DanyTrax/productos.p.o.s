@@ -199,6 +199,12 @@ jQuery(document).ready(function () {
 	});
 });
 </script>
+<?php
+$currentRole = isset($this->user->role) ? $this->user->role : '';
+$isAdminSales = ($currentRole === 'admin' || $currentRole === 'sales');
+$canOpenRegister = $isAdminSales || ($currentRole === 'waiter' && isset($this->user->can_open_register) && strval($this->user->can_open_register) === '1');
+$canCloseRegister = $isAdminSales || ($currentRole === 'waiter' && isset($this->user->can_close_register) && strval($this->user->can_close_register) === '1');
+?>
 <?php if (!$this->session->userdata('register'))
 {?>
    <div class="container container-small">
@@ -207,10 +213,10 @@ jQuery(document).ready(function () {
       </div>
       <div class="row">
          <ul id="storeline">
-           <?php if($this->user->role !== 'admin' && $this->user->role !== 'sales') { ?>
+          <?php if($this->user->role !== 'admin' && $this->user->role !== 'sales') { ?>
              <?php foreach ($Stores as $store):?>
                <?php if($this->user->store_id == $store->id) { ?>
-             <a <?= $store->status == 1 ? "" : 'style="pointer-events: none; display: inline-block;opacity: 0.3;"';?> href="javascript:void(0)"  onclick="OpenRegister(<?=$store->status ? $store->status : 0;?>, <?=$store->id;?>, '<?=$this->user->role;?>')">
+            <a <?= ($store->status == 1 || $canOpenRegister) ? "" : 'style="pointer-events: none; display: inline-block;opacity: 0.3;"';?> href="javascript:void(0)"  onclick="OpenRegister(<?=$store->status ? $store->status : 0;?>, <?=$store->id;?>, '<?=$this->user->role;?>')">
                <li class="listing clearfix">
                  <div class="image_wrapper">
                    <img src="<?=base_url()?>assets/img/store.svg" alt="store">
@@ -247,8 +253,13 @@ jQuery(document).ready(function () {
 
    var waitersCach = [];
    var currentUserRole = '<?php echo $this->user->role; ?>';
+   var currentUserCanOpenRegister = <?=(int) $canOpenRegister;?>;
    function OpenRegister(status, storeid, userRole){
       if(status == 0) {
+         if (!currentUserCanOpenRegister) {
+            alert('Este usuario no tiene permiso para apertura de caja.');
+            return;
+         }
          $('#waiterscach').load("<?php echo site_url('pos/storewaitercash')?>/"+storeid, function(){
             $( "[id='waiterid']" ).on('change', function() {
                var waiterID = $(this).attr("waiter-id");
@@ -336,7 +347,9 @@ jQuery(document).ready(function () {
          <ul class="cbp-vimenu">
          	<li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
          	<li class="pos-fullscreen-toggle"><a href="javascript:void(0)" role="button" onclick="return togglePosFullscreen(event);" title="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?= htmlspecialchars(label('PosFullscreen'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-expand" aria-hidden="true"></i></a></li>
+         	<?php if ($canCloseRegister) { ?>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('CloseRegister');?>"><a href="javascript:void(0)" onclick="CloseRegister()"><i class="fa fa-times" aria-hidden="true"></i></a></li>
+         	<?php } ?>
           <li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('SwitchStore');?>"><a href="pos/switshregister"><i class="fa fa-random" aria-hidden="true"></i></a></li>
          	<li data-toggle="tooltip"  data-html="true" data-placement="left" title="<?=label('Kitchenpage');?>"><a href="kitchens"><i class="fa fa-cutlery" aria-hidden="true"></i></a></li>
          </ul>

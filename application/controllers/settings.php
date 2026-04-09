@@ -98,6 +98,9 @@ class Settings extends MY_Controller
     {
         date_default_timezone_set($this->setting->timezone);
         $date = date("Y-m-d H:i:s");
+        $role = $this->input->post('role');
+        $_POST['can_open_register'] = ($role === 'waiter' && strval($this->input->post('can_open_register')) === '1') ? 1 : 0;
+        $_POST['can_close_register'] = ($role === 'waiter' && strval($this->input->post('can_close_register')) === '1') ? 1 : 0;
         $config['upload_path'] = './files/Avatars/';
         $config['encrypt_name'] = TRUE;
         $config['allowed_types'] = 'gif|jpg|jpeg|png';
@@ -128,6 +131,9 @@ class Settings extends MY_Controller
         date_default_timezone_set($this->setting->timezone);
         $date = date("Y-m-d H:i:s");
         if ($_POST) {
+            $role = $this->input->post('role');
+            $_POST['can_open_register'] = ($role === 'waiter' && strval($this->input->post('can_open_register')) === '1') ? 1 : 0;
+            $_POST['can_close_register'] = ($role === 'waiter' && strval($this->input->post('can_close_register')) === '1') ? 1 : 0;
             $config['upload_path'] = './files/Avatars/';
             $config['encrypt_name'] = TRUE;
             $config['allowed_types'] = 'gif|jpg|jpeg|png';
@@ -192,6 +198,38 @@ class Settings extends MY_Controller
     }
 
     /**
+     * Ejecuta scripts SQL de actualización (idempotentes) desde application/sql.
+     * Solo POST, solo admin.
+     */
+    public function applySqlUpdates()
+    {
+        if (strtolower($this->input->server('REQUEST_METHOD')) !== 'post') {
+            redirect('settings?tab=system', 'location');
+            return;
+        }
+        $files = array(
+            APPPATH . 'sql' . DIRECTORY_SEPARATOR . 'zarest_users_register_permissions.sql',
+        );
+        $result = array(
+            'applied' => 0,
+            'ignored' => 0,
+            'failed' => 0,
+            'messages' => array(),
+        );
+        foreach ($files as $filePath) {
+            $r = $this->_run_sql_update_file($filePath);
+            $result['applied'] += (int) $r['applied'];
+            $result['ignored'] += (int) $r['ignored'];
+            $result['failed'] += (int) $r['failed'];
+            if (! empty($r['messages'])) {
+                $result['messages'] = array_merge($result['messages'], $r['messages']);
+            }
+        }
+        $this->session->set_flashdata('sql_update_result', $result);
+        redirect('settings?tab=system', 'location');
+    }
+
+    /**
      * @return int número de archivos eliminados
      */
     private function _purge_ci_cache_files()
@@ -235,6 +273,55 @@ class Settings extends MY_Controller
                 @rmdir($path);
             }
         }
+    }
+
+    private function _run_sql_update_file($filePath)
+    {
+        $out = array(
+            'applied' => 0,
+            'ignored' => 0,
+            'failed' => 0,
+            'messages' => array(),
+        );
+        if (! is_file($filePath)) {
+            $out['failed'] = 1;
+            $out['messages'][] = 'No existe el archivo SQL: ' . $filePath;
+            return $out;
+        }
+        $sql = @file_get_contents($filePath);
+        if ($sql === false || trim($sql) === '') {
+            $out['failed'] = 1;
+            $out['messages'][] = 'Archivo SQL vacío o no legible: ' . $filePath;
+            return $out;
+        }
+        $statements = preg_split('/;\s*(?:\r\n|\r|\n)/', $sql);
+        if (! is_array($statements)) {
+            $statements = array($sql);
+        }
+        foreach ($statements as $stmt) {
+            $stmt = trim((string) $stmt);
+            if ($stmt === '' || strpos($stmt, '--') === 0) {
+                continue;
+            }
+            $ok = $this->db->query($stmt);
+            if ($ok) {
+                $out['applied']++;
+                continue;
+            }
+            $err = $this->db->error();
+            $code = isset($err['code']) ? (int) $err['code'] : 0;
+            $msg = isset($err['message']) ? strtolower((string) $err['message']) : '';
+            $ignorableCodes = array(1050, 1060, 1061, 1091);
+            $isIgnorableText = (strpos($msg, 'duplicate') !== false) || (strpos($msg, 'already exists') !== false) || (strpos($msg, "can't drop") !== false);
+            if (in_array($code, $ignorableCodes, true) || $isIgnorableText) {
+                $out['ignored']++;
+                continue;
+            }
+            $out['failed']++;
+            $out['messages'][] = 'SQL error [' . $code . ']: ' . (isset($err['message']) ? $err['message'] : 'unknown');
+        }
+
+        return $out;
     }
 
     public function updateSettings()
