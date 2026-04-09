@@ -67,7 +67,7 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
       <![endif]-->
    </head>
-   <body>
+   <body class="has-app-navbar-protrude-logo">
       <!-- Navigation -->
       <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
          <div class="container-fluid">
