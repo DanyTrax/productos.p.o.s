@@ -327,22 +327,35 @@ class Settings extends MY_Controller
             if ($stmt === '' || strpos($stmt, '--') === 0 || strpos($stmt, '#') === 0) {
                 continue;
             }
-            $ok = $this->db->query($stmt);
-            if ($ok) {
-                $out['applied']++;
-                continue;
+            try {
+                $ok = $this->db->query($stmt);
+                if ($ok) {
+                    $out['applied']++;
+                    continue;
+                }
+                $err = $this->db->error();
+                $code = isset($err['code']) ? (int) $err['code'] : 0;
+                $msgRaw = isset($err['message']) ? (string) $err['message'] : '';
+                $msg = strtolower($msgRaw);
+                $ignorableCodes = array(1050, 1060, 1061, 1091);
+                $isIgnorableText = (strpos($msg, 'duplicate') !== false) || (strpos($msg, 'already exists') !== false) || (strpos($msg, "can't drop") !== false);
+                if (in_array($code, $ignorableCodes, true) || $isIgnorableText) {
+                    $out['ignored']++;
+                    continue;
+                }
+                $out['failed']++;
+                $out['messages'][] = 'SQL error [' . $code . ']: ' . ($msgRaw !== '' ? $msgRaw : 'unknown');
+            } catch (Throwable $e) {
+                $msgRaw = (string) $e->getMessage();
+                $msg = strtolower($msgRaw);
+                $isIgnorableText = (strpos($msg, 'duplicate column name') !== false) || (strpos($msg, 'already exists') !== false) || (strpos($msg, 'duplicate key name') !== false);
+                if ($isIgnorableText) {
+                    $out['ignored']++;
+                    continue;
+                }
+                $out['failed']++;
+                $out['messages'][] = 'SQL exception: ' . $msgRaw;
             }
-            $err = $this->db->error();
-            $code = isset($err['code']) ? (int) $err['code'] : 0;
-            $msg = isset($err['message']) ? strtolower((string) $err['message']) : '';
-            $ignorableCodes = array(1050, 1060, 1061, 1091);
-            $isIgnorableText = (strpos($msg, 'duplicate') !== false) || (strpos($msg, 'already exists') !== false) || (strpos($msg, "can't drop") !== false);
-            if (in_array($code, $ignorableCodes, true) || $isIgnorableText) {
-                $out['ignored']++;
-                continue;
-            }
-            $out['failed']++;
-            $out['messages'][] = 'SQL error [' . $code . ']: ' . (isset($err['message']) ? $err['message'] : 'unknown');
         }
 
         return $out;
