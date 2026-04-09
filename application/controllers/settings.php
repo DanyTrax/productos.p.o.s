@@ -207,23 +207,26 @@ class Settings extends MY_Controller
             redirect('settings?tab=system', 'location');
             return;
         }
-        $files = array(
-            APPPATH . 'sql' . DIRECTORY_SEPARATOR . 'zarest_users_register_permissions.sql',
-        );
-        $result = array(
-            'applied' => 0,
-            'ignored' => 0,
-            'failed' => 0,
-            'messages' => array(),
-        );
-        foreach ($files as $filePath) {
-            $r = $this->_run_sql_update_file($filePath);
-            $result['applied'] += (int) $r['applied'];
-            $result['ignored'] += (int) $r['ignored'];
-            $result['failed'] += (int) $r['failed'];
-            if (! empty($r['messages'])) {
-                $result['messages'] = array_merge($result['messages'], $r['messages']);
+        @set_time_limit(30);
+        $result = array('applied' => 0, 'ignored' => 0, 'failed' => 0, 'messages' => array());
+        try {
+            $this->load->database();
+            $files = array(
+                APPPATH . 'sql' . DIRECTORY_SEPARATOR . 'zarest_users_register_permissions.sql',
+            );
+            foreach ($files as $filePath) {
+                $r = $this->_run_sql_update_file($filePath);
+                $result['applied'] += (int) $r['applied'];
+                $result['ignored'] += (int) $r['ignored'];
+                $result['failed'] += (int) $r['failed'];
+                if (! empty($r['messages'])) {
+                    $result['messages'] = array_merge($result['messages'], $r['messages']);
+                }
             }
+        } catch (Throwable $e) {
+            $result['failed']++;
+            $result['messages'][] = 'Error al ejecutar actualización SQL: ' . $e->getMessage();
+            log_message('error', 'applySqlUpdates: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
         }
         $this->session->set_flashdata('sql_update_result', $result);
         redirect('settings?tab=system', 'location');
@@ -294,13 +297,27 @@ class Settings extends MY_Controller
             $out['messages'][] = 'Archivo SQL vacío o no legible: ' . $filePath;
             return $out;
         }
-        $statements = preg_split('/;\s*(?:\r\n|\r|\n)/', $sql);
-        if (! is_array($statements)) {
-            $statements = array($sql);
+        // Parser simple y robusto de sentencias separadas por ';'
+        $statements = array();
+        $buffer = '';
+        $len = strlen($sql);
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $sql[$i];
+            $buffer .= $ch;
+            if ($ch === ';') {
+                $stmt = trim($buffer);
+                if ($stmt !== '') {
+                    $statements[] = $stmt;
+                }
+                $buffer = '';
+            }
+        }
+        if (trim($buffer) !== '') {
+            $statements[] = trim($buffer);
         }
         foreach ($statements as $stmt) {
             $stmt = trim((string) $stmt);
-            if ($stmt === '' || strpos($stmt, '--') === 0) {
+            if ($stmt === '' || strpos($stmt, '--') === 0 || strpos($stmt, '#') === 0) {
                 continue;
             }
             $ok = $this->db->query($stmt);
