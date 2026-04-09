@@ -299,6 +299,7 @@ $lang['saleStripesccess'] = "Venta añadido correctamente";
 $lang['Lowinventory'] = "Bajo inventario";
 $lang['requiresRegister'] = "requiere un registro abierto";
 $lang['Options'] = "opciones";
+$lang['PosaleMissingProduct'] = "producto eliminado del catálogo — use la X para quitar la línea";
 $lang['NoTables'] = "Esta tienda tiene ninguna tabla, por favor visite la página de la tienda para añadir tablas";
 $lang['CancelAll'] = "Cancelar&nbsp;Todas";
 

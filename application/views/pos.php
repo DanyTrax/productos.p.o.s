@@ -966,7 +966,12 @@ function add_posale(id)
          },
          error: function (jqXHR, textStatus, errorThrown)
          {
-            alert("error");
+            var msg = "error";
+            try {
+               var j = JSON.parse(jqXHR.responseText);
+               if (j && j.error) { msg = j.error; }
+            } catch (e) {}
+            alert(msg);
          }
      });
 

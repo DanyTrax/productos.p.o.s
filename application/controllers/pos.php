@@ -141,15 +141,54 @@ class Pos extends CI_Controller
         redirect("", "location");
     }
 
+    /** Alias por compatibilidad con clientes que llaman pos/addpdr en lugar de addpdc */
+    public function addpdr()
+    {
+        $this->addpdc();
+    }
+
+    /** Alias por compatibilidad con URLs pos/addpos */
+    public function addpos()
+    {
+        $this->addpdc();
+    }
+
     public function addpdc()
     {
-      $product = Product::find($this->input->post('product_id'));
+      $pid = $this->input->post('product_id');
+      if ($pid === null || $pid === '') {
+          $this->output->set_status_header(400);
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(array('status' => false, 'error' => 'missing_product_id'));
+          return;
+      }
+      $product = Product::find($pid);
+      if (!$product) {
+          $this->output->set_status_header(404);
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(array('status' => false, 'error' => 'product_not_found'));
+          return;
+      }
+      if (!$this->register) {
+          $this->output->set_status_header(403);
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(array('status' => false, 'error' => 'no_register'));
+          return;
+      }
+      $register = Register::find($this->register);
+      if (!$register) {
+          $this->output->set_status_header(403);
+          header('Content-Type: application/json; charset=utf-8');
+          echo json_encode(array('status' => false, 'error' => 'register_not_found'));
+          return;
+      }
+
       $PostPrice = $this->input->post('price');
-      $price = !$product->taxmethod || $product->taxmethod == '0' ? floatval($PostPrice) : floatval($PostPrice)*(1 + $product->tax / 100);
+      $taxRate = floatval($product->tax);
+      $price = !$product->taxmethod || $product->taxmethod == '0' ? floatval($PostPrice) : floatval($PostPrice) * (1 + $taxRate / 100);
       /******************************************* sock version *************************************************************/
       if($product->type == '0')
       {
-         $register = Register::find($this->register);
          $stock = Stock::find('first', array('conditions' => array('store_id = ? AND product_id = ?', $register->store_id, $this->input->post('product_id'))));
          $quantity = $stock ? $stock->quantity : 0;
         $posale = Posale::find('first', array(
@@ -202,11 +241,13 @@ class Pos extends CI_Controller
              $this->selectedTable
           )
        ));
-        $register = Register::find($this->register);
         $quantity = 1;
         $combos = Combo_item::find('all', array('conditions' => array('product_id = ?', $this->input->post('product_id'))));
         foreach ($combos as $combo) {
            $prd = Product::find($combo->item_id);
+           if (!$prd) {
+               continue;
+           }
            if($prd->type == '0'){
                $stock = Stock::find('first', array('conditions' => array('store_id = ? AND product_id = ?', $register->store_id, $combo->item_id)));
                if ($posale)
@@ -301,13 +342,29 @@ class Pos extends CI_Controller
         $data = '';
         if ($posales) {
             foreach ($posales as $posale) {
-               $alertqt = Product::find($posale->product_id)->alertqt;
-               $type = Product::find($posale->product_id)->type;
+               $product = Product::find($posale->product_id);
                $options = $posale->options;
                $options = trim($options, ",");
-               $storeid = Register::find($this->register)->store_id;
-               $alert = $type == '0' ? (Stock::find('first', array('conditions' => array('product_id = ? AND store_id = ?', $posale->product_id, $storeid)))->quantity - $posale->qt <= $alertqt ? 'background-color:pink' : '') : '';
-                $row = '<div class="col-xs-12"><div class="panel panel-default product-details"><div class="panel-body" style="'.$alert.'"><div class="col-xs-5 nopadding"><div class="col-xs-2 nopadding"><a href="javascript:void(0)" onclick="delete_posale(' . "'" . $posale->id . "'" . ')"><span class="fa-stack fa-sm productD"><i class="fa fa-circle fa-stack-2x delete-product"></i><i class="fa fa-times fa-stack-1x fa-fw fa-inverse"></i></span></a></div><div class="col-xs-10 nopadding"><span class="textPD">' . $posale->name . '</span></div></div><div class="col-xs-2"><span class="textPD">' . number_format((float)$posale->price, $this->setting->decimals, '.', '') . '</span></div><div class="col-xs-3 nopadding productNum"><a href="javascript:void(0)"><span class="fa-stack fa-sm decbutton"><i class="fa fa-square fa-stack-2x light-grey"></i><i class="fa fa-minus fa-stack-1x fa-inverse white"></i></span></a><input type="text" id="qt-' . $posale->id . '" onchange="edit_posale(' . $posale->id . ')" class="form-control" value="' . $posale->qt . '" placeholder="0" maxlength="3"><a href="javascript:void(0)"><span class="fa-stack fa-sm incbutton"><i class="fa fa-square fa-stack-2x light-grey"></i><i class="fa fa-plus fa-stack-1x fa-inverse white"></i></span></a></div><div class="col-xs-2 nopadding "><span class="subtotal textPD">' . number_format((float)$posale->price*$posale->qt, $this->setting->decimals, '.', '') . '  ' . $setting->currency . '</span></div></div><button type="button" onclick="addoptions('.$posale->product_id.', '.$posale->id.')" class="btn btn-success btn-xs">'.label("Options").'</button> <span id="pooptions-'.$posale->id.'"> '.$options.'</sapn></div></div>';
+               $regRow = Register::find($this->register);
+               $storeid = $regRow ? $regRow->store_id : 0;
+               $alert = '';
+               if (!$product) {
+                   $alert = 'background-color:#ffe8e8;border-left:4px solid #c9302c;';
+               } elseif (isset($product->type) && strval($product->type) === '0') {
+                   $alertqt = $product->alertqt;
+                   $stock = Stock::find('first', array('conditions' => array('product_id = ? AND store_id = ?', $posale->product_id, $storeid)));
+                   $alert = ($stock && ($stock->quantity - $posale->qt <= $alertqt)) ? 'background-color:pink' : '';
+               }
+               $nameLine = $posale->name;
+               if (!$product) {
+                   $nameLine .= ' <span class="text-danger small">(' . label('PosaleMissingProduct') . ')</span>';
+               }
+               $pid = intval($posale->product_id);
+               $poid = intval($posale->id);
+               $optionsBtn = $product
+                   ? '<button type="button" onclick="addoptions(' . $pid . ', ' . $poid . ')" class="btn btn-success btn-xs">' . label("Options") . '</button> '
+                   : '';
+                $row = '<div class="col-xs-12"><div class="panel panel-default product-details"><div class="panel-body" style="'.$alert.'"><div class="col-xs-5 nopadding"><div class="col-xs-2 nopadding"><a href="javascript:void(0)" onclick="delete_posale(' . "'" . $posale->id . "'" . ')"><span class="fa-stack fa-sm productD"><i class="fa fa-circle fa-stack-2x delete-product"></i><i class="fa fa-times fa-stack-1x fa-fw fa-inverse"></i></span></a></div><div class="col-xs-10 nopadding"><span class="textPD">' . $nameLine . '</span></div></div><div class="col-xs-2"><span class="textPD">' . number_format((float)$posale->price, $this->setting->decimals, '.', '') . '</span></div><div class="col-xs-3 nopadding productNum"><a href="javascript:void(0)"><span class="fa-stack fa-sm decbutton"><i class="fa fa-square fa-stack-2x light-grey"></i><i class="fa fa-minus fa-stack-1x fa-inverse white"></i></span></a><input type="text" id="qt-' . $posale->id . '" onchange="edit_posale(' . $posale->id . ')" class="form-control" value="' . $posale->qt . '" placeholder="0" maxlength="3"><a href="javascript:void(0)"><span class="fa-stack fa-sm incbutton"><i class="fa fa-square fa-stack-2x light-grey"></i><i class="fa fa-plus fa-stack-1x fa-inverse white"></i></span></a></div><div class="col-xs-2 nopadding "><span class="subtotal textPD">' . number_format((float)$posale->price*$posale->qt, $this->setting->decimals, '.', '') . '  ' . $setting->currency . '</span></div></div>' . $optionsBtn . '<span id="pooptions-'.$posale->id.'"> '.$options.'</span></div></div>';
 
                 $data .= $row;
             }
@@ -323,7 +380,9 @@ class Pos extends CI_Controller
     public function delete($id)
     {
         $posale = Posale::find($id);
-        $posale->delete();
+        if ($posale) {
+            $posale->delete();
+        }
         echo json_encode(array(
             "status" => TRUE
         ));
@@ -332,7 +391,22 @@ class Pos extends CI_Controller
     public function edit($id)
     {
         $posale = Posale::find($id);
+        if (!$posale) {
+            echo json_encode(array("status" => FALSE));
+            return;
+        }
         $product = Product::find($posale->product_id);
+        if (!$product) {
+            $data = array(
+                "qt" => $this->input->post('qt'),
+                "time" => date('Y-m-d H:i:s')
+            );
+            $posale->update_attributes($data);
+            echo json_encode(array(
+                "status" => TRUE
+            ));
+            return;
+        }
        if($product->type == '0'){
           $register = Register::find($this->register);
           $stock = Stock::find('first', array('conditions' => array('store_id = ? AND product_id = ?', $register->store_id, $posale->product_id)));
@@ -358,6 +432,9 @@ class Pos extends CI_Controller
      $combos = Combo_item::find('all', array('conditions' => array('product_id = ?', $posale->product_id)));
      foreach ($combos as $combo) {
          $prd = Product::find($combo->item_id);
+         if (!$prd) {
+             continue;
+         }
          if($prd->type == '0'){
              $stock = Stock::find('first', array('conditions' => array('store_id = ? AND product_id = ?', $register->store_id, $combo->item_id)));
             $diff = $stock ? ($stock->quantity - $combo->quantity*($this->input->post('qt'))) : 1;
@@ -708,6 +785,13 @@ class Pos extends CI_Controller
                 $this->selectedTable
             )
         ));
+        if (!$hold) {
+            echo json_encode(array(
+                "status" => FALSE,
+                "error" => "hold_not_found"
+            ));
+            return;
+        }
         $hold->delete();
         Posale::delete_all(array(
             'conditions' => array(
@@ -723,16 +807,18 @@ class Pos extends CI_Controller
                 $this->selectedTable
             )
         ));
-        Posale::update_all(array(
-            'set' => array(
-                'status' => 1
-            ),
-            'conditions' => array(
-                'number = ? AND register_id = ?',
-                $hold->number,
-                $registerid
-            )
-        ));
+        if ($hold) {
+            Posale::update_all(array(
+                'set' => array(
+                    'status' => 1
+                ),
+                'conditions' => array(
+                    'number = ? AND register_id = ?',
+                    $hold->number,
+                    $registerid
+                )
+            ));
+        }
         echo json_encode(array(
             "status" => TRUE
         ));
