@@ -20,6 +20,35 @@ html.web-app-prefer body {
 	min-height: 100dvh;
 }
 
+/* Logo navbar: círculo con recorte (overflow); carga después del tema y evita bordes cuadrados */
+.navbar-brand.app-navbar-brand {
+	display: flex;
+	align-items: center;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+.navbar-brand.app-navbar-brand .app-navbar-logo-circle {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	overflow: hidden;
+	flex-shrink: 0;
+	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
+}
+.navbar-default .navbar-brand.app-navbar-brand .app-navbar-logo-circle {
+	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+.navbar-brand.app-navbar-brand .app-navbar-logo-circle .app-navbar-logo-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+	display: block;
+	border-radius: 0;
+	max-width: none;
+	max-height: none;
+}
+
 /*
  * Botón flotante "ocultar menú" en POS:
  * Oculto en pantallas muy anchas; visible al reducir ventana (escritorio) o en tablet/móvil.

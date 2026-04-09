@@ -393,18 +393,7 @@ div.dataTables_wrapper{ clear: both; }
    margin-top: -8px;
 }
 
-/* Logo barra: cuadrado recortado en círculo (evita “aplastado” por width fijo + max-height) */
-.navbar-brand.app-navbar-brand .app-navbar-logo-img,
-.navbar-brand .app-navbar-logo-img {
-	width: 44px;
-	height: 44px;
-	max-width: none;
-	max-height: none;
-	object-fit: cover;
-	border-radius: 50%;
-	display: block;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
+/* Tamaño/logo circular: ver pwa-app.css (.app-navbar-logo-circle) */
 
 .navbar{
    -webkit-box-shadow: 0px 3px 18px 0px rgba(0,0,0,0.3);
