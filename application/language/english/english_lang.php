@@ -106,7 +106,7 @@ $lang['ProductOptions'] = "Product Options separated by commas (ex: More Cheese,
 $lang['CategoryName'] = "Category Name";
 $lang['CreatedAt'] = "Ceated At";
 $lang['AddCategory'] = "Add Category";
-$lang['ExpenseCategoriesLoadError'] = "Could not load expense categories. Check that the table zarest_categorie_expences exists (see application/sql).";
+$lang['ExpenseCategoriesLoadError'] = "Could not load expense categories. Check table zarest_categorie_expences, database.php, and model file application/models/Categorie_expence.php (Linux is case-sensitive). See application/logs.";
 
 // ********************* expences page *********************
 
