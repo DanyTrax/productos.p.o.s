@@ -88,6 +88,15 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 	-webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * Tooltips Bootstrap (placement left en la barra POS): el globo puede quedar encima del icono y
+ * robar el clic. aria-describedby en el <li> es accesibilidad, no un fallo.
+ * pointer-events: none hace que el puntero atraviese el tooltip hasta el enlace.
+ */
+.tooltip {
+	pointer-events: none !important;
+}
+
 @media (max-width: 1400px) {
 	ul.cbp-vimenu .pos-floating-nav-toggle,
 	ul.cbp-vimenu2 .pos-floating-nav-toggle,
@@ -200,7 +209,9 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 	padding-bottom: 8px;
 }
 
+/* Carrito (alineado con backup funcional) */
 .pos-mobile-checkout-layout #productList {
+	clear: both;
 	max-height: clamp(120px, calc(100vh - 340px), min(55vh, 520px));
 	max-height: clamp(120px, calc(100dvh - 340px), min(55vh, 520px));
 	min-height: 100px;
@@ -377,4 +388,11 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 		overflow: visible;
 		margin-bottom: 8px;
 	}
+}
+
+/* Cierre de caja: solo efectivo editable en “contados” */
+.close-register-summary .cr-counted-locked {
+	background-color: #f4f4f4 !important;
+	color: #555;
+	cursor: not-allowed;
 }

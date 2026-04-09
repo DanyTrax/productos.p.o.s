@@ -1,13 +1,98 @@
   <div class="container">
 
     <h3><?=label('Sales');?></h3>
-    <br />
-    <br />
+    <div class="row" style="margin: 15px 0 20px;">
+      <div class="col-xs-12">
+        <div class="sales-list-toolbar clearfix">
+          <div class="sales-list-toolbar-inner">
+            <div class="sales-list-toolbar-date">
+              <label for="salesDateRange" class="sales-list-toolbar-date-label"><?=label('SelectRange');?></label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                <input type="text" class="form-control" id="salesDateRange" readonly />
+              </div>
+            </div>
+            <button type="button" class="btn btn-picker" id="salesFilterBtn"><?=label('SalesApplyFilter');?></button>
+            <button type="button" class="btn btn-danger" id="salesExportPdf"><?=label('ExportPDF');?></button>
+            <button type="button" class="btn btn-success" id="salesExportExcel"><?=label('ExportExcel');?></button>
+            <div class="btn-group sales-list-toolbar-columns">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-columns"></i> <?=label('SalesColumns');?> <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-right" style="min-width: 220px; padding: 12px 16px;" onclick="event.stopPropagation();">
+                <li style="list-style: none; margin-bottom: 8px;">
+                  <label class="checkbox-inline" style="font-weight: normal; cursor: pointer; margin: 0;">
+                    <input type="checkbox" id="colToggleTax"> <?=label('tax');?>
+                  </label>
+                </li>
+                <li style="list-style: none;">
+                  <label class="checkbox-inline" style="font-weight: normal; cursor: pointer; margin: 0;">
+                    <input type="checkbox" id="colToggleDiscount"> <?=label('Discount');?>
+                  </label>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      .sales-list-toolbar-inner {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        gap: 10px;
+        width: 100%;
+      }
+      .sales-list-toolbar-date {
+        flex: 1 1 240px;
+        min-width: 200px;
+        max-width: 360px;
+      }
+      .sales-list-toolbar-date-label {
+        display: block;
+        font-weight: normal;
+        margin: 0 0 4px 0;
+        font-size: 13px;
+      }
+      .sales-list-toolbar-date .input-group {
+        width: 100%;
+      }
+      .sales-list-toolbar-inner > .btn {
+        white-space: nowrap;
+        flex: 0 0 auto;
+      }
+      /* .btn-picker es width:100% en el tema (reportes); aquí igual que PDF/Excel */
+      .sales-list-toolbar-inner .btn-picker {
+        width: auto;
+      }
+      .sales-list-toolbar-inner > .btn-group > .btn {
+        white-space: nowrap;
+      }
+      .sales-list-toolbar-columns {
+        flex: 0 0 auto;
+        margin-left: auto;
+      }
+      @media (max-width: 767px) {
+        .sales-list-toolbar-inner {
+          flex-wrap: wrap;
+          align-items: stretch;
+        }
+        .sales-list-toolbar-date {
+          flex: 1 1 100%;
+          max-width: none;
+        }
+        .sales-list-toolbar-columns {
+          margin-left: 0;
+        }
+      }
+    </style>
     <table id="table" class="table table-striped table-bordered" cellspacing="0" width="100%">
       <thead class="thead-inverse">
         <tr>
           <th><?=label('Number');?></th>
           <th><?=label('Customer');?></th>
+          <th><?=label('SalesDateTime');?></th>
           <th><?=label('tax');?></th>
           <th><?=label('Discount');?></th>
           <th><?=label('Total');?></th>
@@ -27,30 +112,77 @@
 
     var save_method; //for save method string
     var table;
-    $(document).ready(function() {
-      table = $('#table').DataTable({
+    var salesDateStart = '';
+    var salesDateEnd = '';
 
-        "processing": true, //Feature control the processing indicator.
-        "serverSide": true, //Feature control DataTables' server-side processing mode.
-        "order": [], //Initial no order.
-        // Load data for the table's content from an Ajax source
+    function salesRefreshRangeParams() {
+      var dr = $('#salesDateRange').data('daterangepicker');
+      if (dr) {
+        salesDateStart = dr.startDate.format('YYYY-MM-DD');
+        salesDateEnd = dr.endDate.format('YYYY-MM-DD');
+      }
+    }
+
+    $(document).ready(function() {
+      $('#salesDateRange').daterangepicker({
+        startDate: moment().startOf('year'),
+        endDate: moment().endOf('year'),
+        opens: 'left',
+        locale: {
+          format: 'DD/MM/YYYY',
+          separator: ' - ',
+          applyLabel: 'OK',
+          cancelLabel: '<?= htmlspecialchars(label('Close'), ENT_QUOTES, 'UTF-8'); ?>',
+          firstDay: 1
+        }
+      });
+      salesRefreshRangeParams();
+
+      table = $('#table').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "order": [[0, 'desc']],
         "ajax": {
             "url": "<?php echo site_url('invoices/ajax_list')?>",
-            "type": "POST"
+            "type": "POST",
+            "data": function (d) {
+              salesRefreshRangeParams();
+              d.date_start = salesDateStart;
+              d.date_end = salesDateEnd;
+            }
         },
-
-        //Set column definition initialisation properties.
         "columnDefs": [
-        {
-          "targets": [ -1 ], //last column
-          "orderable": false, //set not orderable
-        },
+          { "targets": [ 3, 4 ], "visible": false },
+          { "targets": [ -1 ], "orderable": false }
         ],
-         "bInfo": false,
-         // "fnRowCallback": function(nRow, aData, iDisplayIndex) {
-         //     nRow.setAttribute('data-order',aData[4]);
-         // }
+        "bInfo": false
       });
+
+      $('#salesFilterBtn').on('click', function () {
+        table.ajax.reload();
+      });
+
+      $('#colToggleTax').on('change', function () {
+        table.column(3).visible($(this).is(':checked'));
+      });
+      $('#colToggleDiscount').on('change', function () {
+        table.column(4).visible($(this).is(':checked'));
+      });
+
+      function submitSalesExport(format) {
+        salesRefreshRangeParams();
+        var searchVal = (typeof table !== 'undefined' && table.search) ? table.search() : '';
+        var form = $('<form>', { method: 'POST', action: '<?php echo site_url('invoices/export_sales'); ?>', target: '_blank' });
+        form.append($('<input>', { type: 'hidden', name: 'format', value: format }));
+        form.append($('<input>', { type: 'hidden', name: 'date_start', value: salesDateStart }));
+        form.append($('<input>', { type: 'hidden', name: 'date_end', value: salesDateEnd }));
+        form.append($('<input>', { type: 'hidden', name: 'search', value: searchVal }));
+        $('body').append(form);
+        form.submit();
+        form.remove();
+      }
+      $('#salesExportPdf').on('click', function () { submitSalesExport('pdf'); });
+      $('#salesExportExcel').on('click', function () { submitSalesExport('excel'); });
     });
 
 

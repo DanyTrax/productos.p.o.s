@@ -166,6 +166,77 @@ class Settings extends MY_Controller
     }
 
     // Settings
+    /**
+     * Borra archivos de caché de CodeIgniter (application/cache, system/cache) y
+     * intenta reiniciar OPcache si está activo. Solo POST, solo admin.
+     */
+    public function purgeCache()
+    {
+        if (strtolower($this->input->server('REQUEST_METHOD')) !== 'post') {
+            redirect('settings?tab=system', 'location');
+            return;
+        }
+        $removed = $this->_purge_ci_cache_files();
+        $opcache_ok = false;
+        if (function_exists('opcache_reset')) {
+            $st = @opcache_get_status(false);
+            if (is_array($st) && ! empty($st['opcache_enabled'])) {
+                $opcache_ok = @opcache_reset();
+            }
+        }
+        $this->session->set_flashdata('cache_purge_result', array(
+            'files' => (int) $removed,
+            'opcache' => (bool) $opcache_ok,
+        ));
+        redirect('settings?tab=system', 'location');
+    }
+
+    /**
+     * @return int número de archivos eliminados
+     */
+    private function _purge_ci_cache_files()
+    {
+        $removed = 0;
+        $roots = array(
+            rtrim(APPPATH, '/\\') . DIRECTORY_SEPARATOR . 'cache',
+            rtrim(BASEPATH, '/\\') . DIRECTORY_SEPARATOR . 'cache',
+        );
+        $keepNames = array('index.html', '.htaccess', 'index.php');
+        foreach ($roots as $root) {
+            if (! is_dir($root)) {
+                continue;
+            }
+            $this->_purge_cache_directory($root, $keepNames, $removed);
+        }
+
+        return $removed;
+    }
+
+    private function _purge_cache_directory($dir, array $keepNames, &$removed)
+    {
+        $items = @scandir($dir);
+        if ($items === false) {
+            return;
+        }
+        foreach ($items as $name) {
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
+            if (in_array($name, $keepNames, true)) {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $name;
+            if (is_file($path)) {
+                if (@unlink($path)) {
+                    $removed++;
+                }
+            } elseif (is_dir($path)) {
+                $this->_purge_cache_directory($path, array(), $removed);
+                @rmdir($path);
+            }
+        }
+    }
+
     public function updateSettings()
     {
         $config['upload_path'] = './files/Setting/';
@@ -175,6 +246,9 @@ class Settings extends MY_Controller
         $config['max_height'] = '1000';
 
         $setting = Setting::find(1);
+
+        $d = $this->input->post('decimals');
+        $_POST['decimals'] = ($d === null || $d === '') ? 2 : max(0, min(3, (int) $d));
 
         $this->load->library('upload', $config);
         if ($this->upload->do_upload()) {

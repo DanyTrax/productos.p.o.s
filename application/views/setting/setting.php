@@ -10,6 +10,7 @@
             <li class="<?php echo ($tab == 'warehouses') ? 'active' : ''; ?>"><a href="#warehouses" data-toggle="tab"><i class="fa fa-building" aria-hidden="true"></i> <?=label("Warehouses");?></a></li>
             <li class="<?php echo ($tab == 'webapp') ? 'active' : ''; ?>"><a href="#webapp" data-toggle="tab"><i class="fa fa-mobile" aria-hidden="true"></i> <?=label("WebAppTab");?></a></li>
             <li class="<?php echo ($tab == 'payment_methods') ? 'active' : ''; ?>"><a href="#payment_methods" data-toggle="tab"><i class="fa fa-money" aria-hidden="true"></i> <?=label("PaymentMethodsTab");?></a></li>
+            <li class="<?php echo ($tab == 'system') ? 'active' : ''; ?>"><a href="#system" data-toggle="tab"><i class="fa fa-server" aria-hidden="true"></i> <?=label("SystemTab");?></a></li>
          </ul>
 
          <!-- tab sections -->
@@ -46,10 +47,17 @@
                  </div>
                  <div class="form-group col-md-6">
                    <label for="numberDecimal"><?=label("numberDecimal");?></label>
+                   <?php
+                   $selDecimals = 2;
+                   if (isset($this->setting->decimals) && $this->setting->decimals !== '' && $this->setting->decimals !== null) {
+                       $selDecimals = max(0, min(3, (int) $this->setting->decimals));
+                   }
+                   ?>
                    <select class="form-control" name="decimals" id="numberDecimal">
-                      <option value="1" <?=$this->setting->decimals===1 ? 'selected' : '';?>>0.1</option>
-                      <option value="2" <?=$this->setting->decimals===2 ? 'selected' : '';?>>0.01</option>
-                      <option value="3" <?=$this->setting->decimals===3 ? 'selected' : '';?>>0.001</option>
+                      <option value="0" <?=$selDecimals === 0 ? 'selected' : '';?>><?=label('DecimalsNone');?></option>
+                      <option value="1" <?=$selDecimals === 1 ? 'selected' : '';?>>0.1</option>
+                      <option value="2" <?=$selDecimals === 2 ? 'selected' : '';?>>0.01</option>
+                      <option value="3" <?=$selDecimals === 3 ? 'selected' : '';?>>0.001</option>
                    </select>
                  </div>
                  <div class="form-group col-md-6">
@@ -267,6 +275,33 @@
                   </div>
                </div>
                <?php echo form_close(); ?>
+            </div>
+            <div class="tab-pane fade in <?php echo ($tab == 'system') ? 'active' : ''; ?>" id="system">
+               <h1><i class="fa fa-server" aria-hidden="true"></i> <?=label("SystemTab");?></h1>
+               <?php
+               $_cp = $this->session->flashdata('cache_purge_result');
+               if (is_array($_cp)) {
+                   $_n = isset($_cp['files']) ? (int) $_cp['files'] : 0;
+                   $_oc = ! empty($_cp['opcache']);
+               ?>
+               <div class="alert alert-success"><?=label("SystemCachePurgeOk");?>
+                  <br><small class="text-muted"><?= sprintf(label("SystemCachePurgeDetail"), $_n, $_oc ? label("SystemCacheOpcacheYes") : label("SystemCacheOpcacheNo")); ?></small>
+               </div>
+               <?php } ?>
+               <div class="well">
+                  <h4><?=label("SystemCacheTitle");?></h4>
+                  <p><?=label("SystemCacheDesc");?></p>
+                  <ul class="text-muted small">
+                     <li><?=label("SystemCacheBulletFiles");?></li>
+                     <li><?=label("SystemCacheBulletOpcache");?></li>
+                     <li><?=label("SystemCacheBulletBrowser");?></li>
+                  </ul>
+                  <?php echo form_open('settings/purgeCache'); ?>
+                  <button type="submit" class="btn btn-warning" onclick="return confirm('<?= htmlspecialchars(label('SystemCachePurgeConfirm'), ENT_QUOTES, 'UTF-8'); ?>');">
+                     <i class="fa fa-trash" aria-hidden="true"></i> <?=label("SystemCachePurgeBtn");?>
+                  </button>
+                  <?php echo form_close(); ?>
+               </div>
             </div>
             <div class="tab-pane fade in <?php echo ($tab == 'webapp') ? 'active' : ''; ?>" id="webapp">
                <?php

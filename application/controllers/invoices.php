@@ -17,6 +17,19 @@ class Invoices extends CI_Controller
         $this->setting = Setting::find(1);
     }
 
+    /**
+     * @param mixed $raw
+     */
+    private function _format_sale_list_datetime($raw)
+    {
+        if ($raw instanceof DateTimeInterface) {
+            return $raw->format('d/m/Y H:i');
+        }
+        $t = strtotime((string) $raw);
+
+        return $t ? date('d/m/Y H:i', $t) : '-';
+    }
+
     public function ajax_list()
     {
         $list = $this->invoice->get_datatables();
@@ -27,6 +40,7 @@ class Invoices extends CI_Controller
             $row = array();
             $row[] = sprintf("%05d", $invoice->id);
             $row[] = $invoice->clientname;
+            $row[] = $this->_format_sale_list_datetime($invoice->created_at);
             $row[] = $invoice->tax;
             $row[] = $invoice->discount;
             $row[] = number_format((float)$invoice->total, $this->setting->decimals, '.', '');
@@ -62,6 +76,96 @@ class Invoices extends CI_Controller
         );
         // output to json format
         echo json_encode($output);
+    }
+
+    /**
+     * Exportar listado de ventas (mismo rango de fechas y búsqueda que la tabla).
+     * POST: format (pdf|excel), date_start, date_end, search (opcional).
+     */
+    public function export_sales()
+    {
+        if (! $this->user) {
+            show_error('Unauthorized', 403);
+
+            return;
+        }
+        $format = strtolower((string) $this->input->post('format'));
+        if (! in_array($format, array('pdf', 'excel'), true)) {
+            show_error('Invalid format', 400);
+
+            return;
+        }
+        $ds = trim((string) $this->input->post('date_start'));
+        $de = trim((string) $this->input->post('date_end'));
+        $search = (string) $this->input->post('search');
+
+        $list = $this->invoice->get_sales_for_export($ds, $de, $search);
+        $headers = array(
+            label('Number'),
+            label('Customer'),
+            label('SalesDateTime'),
+            label('tax'),
+            label('Discount'),
+            label('Total'),
+            label('Createdby'),
+            label('TotalItems'),
+            label('Status'),
+        );
+        $curSuf = ' ' . $this->setting->currency;
+        $rows = array();
+        $sumTotal = 0.0;
+        foreach ($list as $invoice) {
+            switch ((int) $invoice->status) {
+                case 1:
+                    $stKey = 'unpaid';
+                    break;
+                case 2:
+                    $stKey = 'Partiallypaid';
+                    break;
+                default:
+                    $stKey = 'paid';
+            }
+            $sumTotal += (float) $invoice->total;
+            $rows[] = array(
+                sprintf('%05d', $invoice->id),
+                (string) $invoice->clientname,
+                $this->_format_sale_list_datetime($invoice->created_at),
+                (string) $invoice->tax,
+                (string) $invoice->discount,
+                number_format((float) $invoice->total, $this->setting->decimals, '.', '') . $curSuf,
+                (string) $invoice->created_by,
+                (string) $invoice->totalitems,
+                label($stKey),
+            );
+        }
+
+        $title = label('Sales');
+        $subtitle = ($ds !== '' && $de !== '')
+            ? (label('SelectRange') . ': ' . $ds . ' — ' . $de)
+            : '';
+        $n = count($rows);
+        $sumFmt = number_format($sumTotal, $this->setting->decimals, '.', '') . $curSuf;
+        $footerPlain = label('Total') . ' (' . $n . '): ' . $sumFmt;
+        $footerCsv = array_fill(0, count($headers), '');
+        $footerCsv[0] = label('Total');
+        $footerCsv[count($headers) - 1] = $sumFmt;
+
+        require_once APPPATH . 'libraries/Report_exporter.php';
+        $slug = 'ventas_' . ($ds !== '' ? $ds : 'all') . '_' . ($de !== '' ? $de : 'all');
+
+        if (count($rows) === 0) {
+            $emptyRow = array_fill(0, count($headers), '');
+            $emptyRow[0] = label('EmptyList');
+            $rows = array($emptyRow);
+            $footerPlain = '';
+            $footerCsv = null;
+        }
+
+        if ($format === 'pdf') {
+            Report_exporter::send_pdf($slug, $title, $subtitle, $headers, $rows, $footerPlain);
+        } else {
+            Report_exporter::send_excel_csv($slug, $headers, $rows, $footerCsv, (string) $this->setting->currency);
+        }
     }
 
     public function ajax_delete($id)

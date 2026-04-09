@@ -53,6 +53,7 @@ $lang['Categories'] = "Categorias";
 $lang['Customers'] = "Clientes";
 $lang['Sales'] = "Ventas";
 $lang['Reports'] = "Reportes";
+$lang['StatsTabStatistics'] = "Estadísticas";
 $lang['Expense'] = "Gastos";
 $lang['People'] = "Personas";
 $lang['Suppliers'] = "Proveedores";
@@ -172,6 +173,7 @@ $lang['AddWarehouse'] = "Añadir Almacén";
 $lang['WarehouseName'] = "Nombre del almacén";
 $lang['WarehousePhone'] = "almacén de teléfono";
 $lang['numberDecimal'] = "Número de decimales (redondeo)";
+$lang['DecimalsNone'] = "Ninguno (solo enteros)";
 
 // ********************* Customer page *********************
 
@@ -214,6 +216,8 @@ $lang['EXPECTED'] = "Esperado";
 $lang['COUNTED'] = "contados";
 $lang['DIFFERENCES'] = "Diferencias";
 $lang['PaymentsSummary'] = "Resumen pagos";
+$lang['CloseRegisterByMethod'] = "Desglose por medio de pago";
+$lang['CloseRegisterNoMethodTotals'] = "No hay importes por medio de pago en este turno.";
 $lang['Openingtime'] = "Tiempo de apertura";
 $lang['Openedby'] = "Abierto por";
 $lang['note'] = "Nota";
@@ -279,6 +283,18 @@ $lang['PaymentTypeCheque'] = "Cheque (número de cheque)";
 $lang['PaymentTypeOther'] = "Otro (como efectivo: monto y vuelto)";
 $lang['PaymentMethodsDeleteHint'] = "Los tres métodos base (efectivo, tarjeta y cheque) no se pueden eliminar para no romper ventas antiguas. Cuando agregues un medio propio (Nequi, Bancolombia, etc.), en esa fila aparecerá el botón Eliminar junto a Enviar.";
 $lang['PaymentMethodBuiltin'] = "Base (no eliminar)";
+$lang['SystemTab'] = "Sistema";
+$lang['SystemCacheTitle'] = "Caché del servidor";
+$lang['SystemCacheDesc'] = "Elimina los archivos de caché de CodeIgniter (application/cache y system/cache si existen). Útil tras actualizar o si algo parece «atascado».";
+$lang['SystemCacheBulletFiles'] = "Borra archivos de datos de caché; conserva index.html y .htaccess en esas carpetas.";
+$lang['SystemCacheBulletOpcache'] = "Si PHP OPcache está activo en este servidor, se reiniciará (los scripts PHP se recompilan en la siguiente petición).";
+$lang['SystemCacheBulletBrowser'] = "No vacía la caché del navegador en las cajas; si hace falta, usa recarga forzada (Ctrl+F5) o borrar datos del sitio.";
+$lang['SystemCachePurgeBtn'] = "Purgar caché";
+$lang['SystemCachePurgeConfirm'] = "¿Purgar la caché del servidor ahora?";
+$lang['SystemCachePurgeOk'] = "Caché purgada correctamente.";
+$lang['SystemCachePurgeDetail'] = "Archivos eliminados: %1\$s. Reinicio de OPcache: %2\$s.";
+$lang['SystemCacheOpcacheYes'] = "sí";
+$lang['SystemCacheOpcacheNo'] = "no (no activo o no permitido)";
 $lang['method'] = "Método:";
 $lang['Cash'] = "Efectivo";
 $lang['Paid'] = "Pagado";
@@ -316,6 +332,9 @@ $lang['Number'] = "Numero";
 $lang['Status'] = "Estado";
 $lang['Payements'] = "Pagos";
 $lang['AddPayements'] = "Agregar pagos";
+$lang['SalesDateTime'] = "Fecha y hora";
+$lang['SalesApplyFilter'] = "Filtrar lista";
+$lang['SalesColumns'] = "Columnas";
 
 // ********************* Report page *********************
 
@@ -323,8 +342,22 @@ $lang['Customers'] = "Clientes";
 $lang['in'] = "en";
 $lang['TodaySale'] = "Ventas de HOY";
 $lang['monthlyStats'] = "estadisticas mensuales";
-$lang['TopProducts'] = "5 Productos TOP este año";
+$lang['TopCategories'] = "Top 5 categorías (histórico)";
+$lang['TopCategoriesAllTimeHint'] = "Participación en unidades y en ventas por categoría de producto (todas las ventas registradas). Los % usan los mismos totales globales que el ranking de productos.";
+$lang['TopCategoriesUncategorized'] = "Sin categoría";
+$lang['TopProducts'] = "Top 5 productos (histórico)";
+$lang['TopProductsAllTimeHint'] = "Ordenados por unidades vendidas en todas las ventas registradas. Los porcentajes son sobre el total global.";
+$lang['TopProductsColQty'] = "Unidades";
+$lang['TopProductsColQtyPct'] = "% uds.";
+$lang['TopProductsColRev'] = "Ventas";
+$lang['TopProductsColRevPct'] = "% ventas";
+$lang['TopProductsTooltipQty'] = "unidades";
+$lang['TopProductsTooltipQtyPct'] = "% del total unidades";
+$lang['TopProductsTooltipRevPct'] = "% del total ventas";
 $lang['ClientsStats'] = "Estadisticas de Clientes";
+$lang['CategoriesStats'] = "Estadísticas por categorías";
+$lang['SelectCategory'] = "Seleccionar categoría";
+$lang['AllCategories'] = "Todas las categorías";
 $lang['SelectClient'] = "Seleccionar Cliente";
 $lang['ProductsStats'] = "Estadisticas Productos";
 $lang['SelectProduct'] = "Seleccionar Producto";
@@ -335,6 +368,10 @@ $lang['Profit'] = "Ingresos";
 $lang['TotalProfit'] = "Total Ingresos";
 $lang['RegisterStats'] = "Registros Estadísticas";
 $lang['SelectStore'] = "Seleccionar tienda";
+$lang['ExportPDF'] = "Exportar PDF";
+$lang['ExportExcel'] = "Exportar Excel (CSV)";
+$lang['StockStatsTitle'] = "Reporte de stock";
+$lang['StockStatsSubtitle'] = "Sin rango de fechas (inventario actual).";
 
 //---- Add Sale
 

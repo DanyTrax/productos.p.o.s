@@ -450,8 +450,8 @@ jQuery(document).ready(function () {
          <div class="col-xs-2 table-header nopadding">
             <h3><?=label("Total");?></h3>
          </div>
-         <div id="productList">
-            <!-- product List goes here  -->
+         <div id="productList" class="pos-product-list">
+            <div class="messageVide"><?= htmlspecialchars(label("EmptyList"), ENT_QUOTES, 'UTF-8'); ?> <span>(<?= htmlspecialchars(label("SelectProduct"), ENT_QUOTES, 'UTF-8'); ?>)</span></div>
          </div>
          <div class="footer-section">
             <div class="pos-checkout-dock-row">
@@ -547,10 +547,71 @@ jQuery(document).ready(function () {
 <!-- /.container -->
 <script type="text/javascript">
 
+function getSelectedHoldNum() {
+   var $h = $('.selectedHold').first();
+   var id = $h.attr('id');
+   if (id !== undefined && id !== null && String(id) !== '') {
+      return String(id);
+   }
+   var txt = $.trim($h.clone().children().remove().end().text());
+   var m = txt.match(/^(\d+)/);
+   return m ? m[1] : '1';
+}
+
+/** Igual que backup funcional: anti-caché en la URL. */
+function posUrlBust(url) {
+   return (url.indexOf('?') >= 0 ? url + '&' : url + '?') + '_=' + Date.now();
+}
+
+/**
+ * Refresco del carrito: .load() encadenados para evitar carreras (lista vacía / totales desinc.).
+ */
+function posReloadCartAndTotals() {
+   $('#productList').load(posUrlBust("<?php echo site_url('pos/load_posales'); ?>"), function() {
+      $('#ItemsNum span, #ItemsNum2 span').load(posUrlBust("<?php echo site_url('pos/totiems'); ?>"), function() {
+         $('#Subtot').load(posUrlBust("<?php echo site_url('pos/subtot'); ?>"), null, total_change);
+      });
+   });
+}
+
+function posRefreshSubtotOnly() {
+   $('#Subtot').load(posUrlBust("<?php echo site_url('pos/subtot'); ?>"), null, total_change);
+}
+
+var __posDelRefreshTimer = null;
+function refreshPosListAfterDelete() {
+   clearTimeout(__posDelRefreshTimer);
+   __posDelRefreshTimer = setTimeout(function() {
+      __posDelRefreshTimer = null;
+      posReloadCartAndTotals();
+   }, 120);
+}
+
+$(document).on('click', '#productList .incbutton', function(e) {
+   e.preventDefault();
+   var $input = $(this).closest('.productNum').find('input');
+   if (!$input.length) { return; }
+   var oldValue = parseFloat($input.val()) || 0;
+   $input.val(oldValue + 1);
+   edit_posale($input.attr('id').slice(3));
+});
+
+$(document).on('click', '#productList .decbutton', function(e) {
+   e.preventDefault();
+   var $input = $(this).closest('.productNum').find('input');
+   if (!$input.length) { return; }
+   var oldValue = parseFloat($input.val()) || 0;
+   var newVal = oldValue > 1 ? oldValue - 1 : 1;
+   $input.val(newVal);
+   edit_posale($input.attr('id').slice(3));
+});
+
 $(document).ready(function() {
-   $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-   $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
-   $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
+   $('#productList').load(posUrlBust("<?php echo site_url('pos/load_posales'); ?>"), function() {
+      $('#ItemsNum span, #ItemsNum2 span').load(posUrlBust("<?php echo site_url('pos/totiems'); ?>"), function() {
+         $('#Subtot').load(posUrlBust("<?php echo site_url('pos/subtot'); ?>"), null, total_change);
+      });
+   });
    $('.holdList').load("<?php echo site_url('pos/holdList/'.$this->register)?>", function(){
       var holdi = $('.selectedHold').attr("id");
       $('#waiterS').load("<?php echo site_url('pos/WaiterName')?>/"+holdi, function(){
@@ -833,22 +894,43 @@ function total_change() {
 }
 
 
+window.posDeletePending = window.posDeletePending || {};
 function delete_posale(id)
 {
-  // ajax delete data to database
+  id = String(id);
+  if (window.posDeletePending[id]) {
+      return;
+  }
+  window.posDeletePending[id] = true;
   $.ajax({
-      url : "<?php echo site_url('pos/delete')?>/"+id,
+      url : "<?php echo site_url('pos/delete')?>/"+encodeURIComponent(id),
       type: "POST",
       dataType: "JSON",
       success: function(data)
       {
-         $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-         $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-         $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+         refreshPosListAfterDelete();
       },
       error: function (jqXHR, textStatus, errorThrown)
       {
-         alert("error");
+         if (textStatus === 'abort') {
+            return;
+         }
+         var recovered = false;
+         if (jqXHR.responseText) {
+            try {
+               var j = JSON.parse(jqXHR.responseText);
+               if (j && j.status) {
+                  recovered = true;
+                  refreshPosListAfterDelete();
+               }
+            } catch (e) {}
+         }
+         if (!recovered) {
+            alert("error");
+         }
+      },
+      complete: function () {
+         delete window.posDeletePending[id];
       }
   });
 
@@ -863,9 +945,7 @@ function AddHold()
       dataType: "JSON",
       success: function(data)
       {
-         $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-         $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-         $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+         posReloadCartAndTotals();
          $('.holdList').load("<?php echo site_url('pos/holdList/'.$this->register)?>");
       },
       error: function (jqXHR, textStatus, errorThrown)
@@ -878,8 +958,8 @@ function AddHold()
 
 function RemoveHold()
 {
-   var number = $('.selectedHold').clone().children().remove().end().text();
-   if(number !=1) {
+   var number = getSelectedHoldNum();
+   if(number != 1) {
       swal({   title: '<?=label("Areyousure");?>',
       text: '<?=label("Deletemessage");?>',
       type: "warning",
@@ -895,9 +975,7 @@ function RemoveHold()
             dataType: "JSON",
             success: function(data)
             {
-               $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-               $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-               $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+               posReloadCartAndTotals();
                $('.holdList').load("<?php echo site_url('pos/holdList/'.$this->register)?>");
             },
             error: function (jqXHR, textStatus, errorThrown)
@@ -919,11 +997,9 @@ function SelectHold(number)
       dataType: "JSON",
       success: function(data)
       {
-         $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-         $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-         $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
          $('#'+number).parent().children().removeClass('selectedHold');
          $('#'+number).addClass('selectedHold');
+         posReloadCartAndTotals();
          $('#waiterS').load("<?php echo site_url('pos/WaiterName')?>/"+number, function(){
             var res = $('#waiterS').text();
             if(res>0) {$('#WaiterName').val(res).trigger("change");}else{$('#WaiterName').val(0).trigger("change");}
@@ -947,7 +1023,7 @@ function add_posale(id)
 {
    var name1 = $('#idname-'+id).val();
    var price1 = $('#idprice-'+id).val();
-   var number = $('.selectedHold').clone().children().remove().end().text();
+   var number = getSelectedHoldNum();
    var waiterID = $('#WaiterName').find('option:selected').val();
      // ajax delete data to database
      $.ajax({
@@ -959,9 +1035,7 @@ function add_posale(id)
             if(data === 'stock'){
                swal("<?=label("Lowinventory");?>");
             }else{
-                $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-                $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-                $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+                posReloadCartAndTotals();
             }
          },
          error: function (jqXHR, textStatus, errorThrown)
@@ -1017,11 +1091,9 @@ function edit_posale(id)
             {
                if(data === 'stock'){
                   swal("<?=label("Lowinventory");?>");
-                  $('#productList').load("<?php echo site_url('pos/load_posales')?>");
+                  posReloadCartAndTotals();
                }else{
-                   $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-                   $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-                   $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+                   posReloadCartAndTotals();
                }
             },
             error: function (jqXHR, textStatus, errorThrown)
@@ -1038,7 +1110,7 @@ $("#customerSelect").change(function(){
   var id = $(this).find('option:selected').val();
   if(id === '0') {
       $('.Remise').val('<?=$this->setting->discount;?>');
-      $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+      posRefreshSubtotOnly();
   } else {
      $.ajax({
          url : "<?php echo site_url('pos/GetDiscount')?>/"+id,
@@ -1048,7 +1120,7 @@ $("#customerSelect").change(function(){
             var values = data.split('~');
             $('#customerName span').text(values[1]);
             $('.Remise').val(values[0]);
-            $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+            posRefreshSubtotOnly();
          },
          error: function (jqXHR, textStatus, errorThrown)
          {
@@ -1078,9 +1150,7 @@ function cancelPOS(){
       type: "POST",
       success: function(data)
       {
-          $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-          $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
-          $('#ItemsNum span, #ItemsNum2 span').text("0");
+          posReloadCartAndTotals();
       },
       error: function (jqXHR, textStatus, errorThrown)
       {
@@ -1130,9 +1200,7 @@ function saleBtn(type) {
       success: function(data)
       {
          $('#printSection').html(data);
-         $('#productList').load("<?php echo site_url('pos/load_posales')?>");
-         $('#ItemsNum span, #ItemsNum2 span').load("<?php echo site_url('pos/totiems')?>");
-         $('#Subtot').load("<?php echo site_url('pos/subtot')?>", null, total_change);
+         posReloadCartAndTotals();
          $('#AddSale').modal('hide');
          $('#ticket').modal('show');
          $('#ReturnChange span').text('0');
@@ -1376,6 +1444,30 @@ function showticket(){
 <?php } ?>
 
 <script type="text/javascript">
+function recalcCloseRegisterSummary() {
+   var dec = <?=(int)$this->setting->decimals;?>;
+   var sumE = 0, sumC = 0, sumD = 0;
+   $('#closeregsection tr.close-reg-line').each(function() {
+      var $tr = $(this);
+      var exp = parseFloat(String($tr.find('.cr-expected').text()).replace(/[^\d.\-]/g, '')) || 0;
+      var ct = parseFloat(String($tr.find('.cr-counted').val()).replace(/[^\d.\-]/g, '')) || 0;
+      var diff = ct - exp;
+      sumE += exp;
+      sumC += ct;
+      sumD += diff;
+      var $d = $tr.find('.cr-diff');
+      $d.text(diff.toFixed(dec));
+      if (diff < 0) {
+         $d.addClass('red').removeClass('light-blue');
+      } else {
+         $d.removeClass('red').addClass('light-blue');
+      }
+   });
+   $('#closeregsection #total').text(sumE.toFixed(dec));
+   $('#closeregsection #countedtotal').text(sumC.toFixed(dec));
+   $('#closeregsection #difftotal').text(sumD.toFixed(dec));
+}
+
 function CloseRegister() {
    $.ajax({
       url : "<?php echo site_url('pos/CloseRegister')?>/",
@@ -1384,56 +1476,21 @@ function CloseRegister() {
       {
          $('#closeregsection').html(data);
          $('#CloseRegister').modal('show');
-         setTimeout(function(){$('#countedcash').focus()}, 1000);
-         $('#countedcash').on('keyup',function() {
-           var change = -(parseFloat($('#expectedcash').text()) - parseFloat($(this).val()));
-           var difftot = change + parseFloat($('#diffcc').text()) + parseFloat($('#diffcheque').text());
-           var total = parseFloat($('#countedcc').val()) + parseFloat($('#countedcheque').val()) + parseFloat($('#countedcash').val());
-           $('#countedtotal').text(total.toFixed(<?=$this->setting->decimals;?>));
-           $('#difftotal').text(difftot.toFixed(<?=$this->setting->decimals;?>))
-           if(change < 0){
-               $('#diffcash').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcash').addClass( "red" );
-               $('#diffcash').removeClass( "light-blue" );
-           }else{
-               $('#diffcash').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcash').removeClass( "red" );
-               $('#diffcash').addClass( "light-blue" );
-           }
+         $('#closeregsection').off('keyup input', '.cr-counted').on('keyup input', '.cr-counted:not([readonly])', function() {
+            recalcCloseRegisterSummary();
          });
-
-         $('#countedcc').on('keyup',function() {
-           var change = -(parseFloat($('#expectedcc').text()) - parseFloat($(this).val()));
-           var difftot = change + parseFloat($('#diffcash').text()) + parseFloat($('#diffcheque').text());
-           var total = parseFloat($('#countedcc').val()) + parseFloat($('#countedcheque').val()) + parseFloat($('#countedcash').val());
-           $('#countedtotal').text(total.toFixed(<?=$this->setting->decimals;?>));
-           $('#difftotal').text(difftot.toFixed(<?=$this->setting->decimals;?>))
-           if(change < 0){
-               $('#diffcc').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcc').addClass( "red" );
-               $('#diffcc').removeClass( "light-blue" );
-           }else{
-               $('#diffcc').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcc').removeClass( "red" );
-               $('#diffcc').addClass( "light-blue" );
-           }
-         });
-
-         $('#countedcheque').on('keyup',function() {
-           var change = -(parseFloat($('#expectedcheque').text()) - parseFloat($(this).val()));
-           var difftot = change + parseFloat($('#diffcc').text()) + parseFloat($('#diffcash').text());
-           var total = parseFloat($('#countedcc').val()) + parseFloat($('#countedcheque').val()) + parseFloat($('#countedcash').val());
-           $('#countedtotal').text(total.toFixed(<?=$this->setting->decimals;?>));
-           $('#difftotal').text(difftot.toFixed(<?=$this->setting->decimals;?>))
-           if(change < 0){
-               $('#diffcheque').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcheque').addClass( "red" );
-               $('#diffcheque').removeClass( "light-blue" );
-           }else{
-               $('#diffcheque').text(change.toFixed(<?=$this->setting->decimals;?>));
-               $('#diffcheque').removeClass( "red" );
-               $('#diffcheque').addClass( "light-blue" );
-           }
+         recalcCloseRegisterSummary();
+         $('#CloseRegister').off('shown.bs.modal.closeRegFocus').one('shown.bs.modal.closeRegFocus', function() {
+            var $inp = $('#closeregsection tr.close-reg-line[data-type-code="cash"] .cr-counted').first();
+            if ($inp.length) {
+               $inp.trigger('focus');
+               try {
+                  var el = $inp.get(0);
+                  if (el && typeof el.select === 'function') {
+                     el.select();
+                  }
+               } catch (e) { /* IE/edge antiguos */ }
+            }
          });
       },
       error: function (jqXHR, textStatus, errorThrown)
@@ -1444,12 +1501,17 @@ function CloseRegister() {
 }
 
 function SubmitRegister() {
-   var expectedcash = $('#expectedcash').text();
-   var countedcash = $('#countedcash').val();
-   var expectedcc = $('#expectedcc').text();
-   var countedcc = $('#countedcc').val();
-   var expectedcheque = $('#expectedcheque').text();
-   var countedcheque = $('#countedcheque').val();
+   var lines = [];
+   $('#closeregsection tr.close-reg-line').each(function() {
+      var $tr = $(this);
+      lines.push({
+         key: $tr.attr('data-method-key'),
+         label: $tr.attr('data-method-label'),
+         type: $tr.attr('data-type-code'),
+         expected: $tr.find('.cr-expected').text(),
+         counted: $tr.find('.cr-counted').val()
+      });
+   });
    var RegisterNote = $('#RegisterNote').val();
 
    swal({   title: '<?=label("Areyousure");?>',
@@ -1464,7 +1526,7 @@ function SubmitRegister() {
    $.ajax({
       url : "<?php echo site_url('pos/SubmitRegister')?>/",
       type: "POST",
-      data: {expectedcash: expectedcash, countedcash: countedcash, expectedcc: expectedcc, countedcc: countedcc, expectedcheque: expectedcheque, countedcheque: countedcheque, RegisterNote: RegisterNote},
+      data: {close_lines: JSON.stringify(lines), RegisterNote: RegisterNote},
       success: function(data)
       {
          window.location.href = "<?php echo site_url()?>";
