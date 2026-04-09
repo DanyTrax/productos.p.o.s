@@ -78,7 +78,7 @@
                  <span class="icon-bar"></span>
                  <span class="icon-bar"></span>
                </button>
-               <a class="navbar-brand" href="#"><?php if($this->setting->logo){ ?><img src="<?=base_url()?>files/Setting/<?=$this->setting->logo;?>" alt="logo"  style='max-height: 45px; max-width: 200px;margin-top:5px;'><?php } else { ?><img src="<?=base_url()?>assets/img/logo.png" alt="logo"><?php } ?></a>
+               <a class="navbar-brand app-navbar-brand" href="<?= base_url(); ?>" title="<?= htmlspecialchars($this->setting->companyname, ENT_QUOTES, 'UTF-8'); ?>"><?php if ($this->setting->logo) { ?><img src="<?= base_url() ?>files/Setting/<?= htmlspecialchars($this->setting->logo, ENT_QUOTES, 'UTF-8'); ?>" alt="" class="app-navbar-logo-img"><?php } else { ?><img src="<?= base_url() ?>assets/img/logo.png" alt="" class="app-navbar-logo-img"><?php } ?></a>
             </div>
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
