@@ -107,6 +107,7 @@ $lang['ProductOptions'] = "Opciones de producto separadas por comas (por ejemplo
 $lang['CategoryName'] = "Nombre de la Categoria";
 $lang['CreatedAt'] = "Creada en";
 $lang['AddCategory'] = "Agregar Categoria";
+$lang['ExpenseCategoriesLoadError'] = "No se pudieron cargar las categorías de gastos. Compruebe que exista la tabla zarest_categorie_expences (vea application/sql).";
 
 // ********************* expences page *********************
 

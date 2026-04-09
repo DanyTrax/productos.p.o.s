@@ -21,7 +21,6 @@
       <title><?=label('title');?> <?= $this->setting->companyname;?></title>
       <!-- jQuery -->
       <script type="text/javascript" src="<?=base_url()?>assets/js/jquery-2.2.2.min.js"></script>
-      <script type="text/javascript" src="<?=base_url()?>assets/js/loading.js"></script>
       <!-- normalize & reset style -->
       <link rel="stylesheet" href="<?=base_url();?>assets/css/normalize.min.css"  type='text/css'>
       <link rel="stylesheet" href="<?=base_url();?>assets/css/reset.min.css"  type='text/css'>

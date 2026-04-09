@@ -1,5 +1,8 @@
 <!-- Page Content -->
 <div class="container">
+   <?php if (!empty($expense_categories_failed) && $expense_categories_failed): ?>
+   <div class="alert alert-danger" style="margin-top:100px;"><?= htmlspecialchars(label('ExpenseCategoriesLoadError'), ENT_QUOTES, 'UTF-8'); ?></div>
+   <?php endif; ?>
    <div class="row" style="margin-top:100px;">
       <table id="Table" class="table table-striped table-bordered" cellspacing="0" width="100%">
           <thead>
@@ -14,7 +17,16 @@
              <?php foreach ($categories as $category):?>
               <tr>
                  <td><?=$category->name;?></td>
-                 <td><?=$category->created_date->format('Y-m-d h:i:s');?></td>
+                 <td><?php
+$d = isset($category->created_date) ? $category->created_date : null;
+if ($d instanceof DateTimeInterface) {
+    echo htmlspecialchars($d->format('Y-m-d H:i:s'), ENT_QUOTES, 'UTF-8');
+} elseif (is_string($d) && $d !== '') {
+    echo htmlspecialchars($d, ENT_QUOTES, 'UTF-8');
+} else {
+    echo htmlspecialchars('—', ENT_QUOTES, 'UTF-8');
+}
+?></td>
                  <td><div class="btn-group">
                        <?php if($this->user->role === "admin"){?><a class="btn btn-default" href="javascript:void(0)" data-toggle="popover" data-placement="left"  data-html="true" title='<?=label("Areyousure");?>' data-content='<a class="btn btn-danger" href="categorie_expences/delete/<?=$category->id;?>"><?=label("yesiam");?></a>'><i class="fa fa-times"></i></a><?php } ?>
                        <a class="btn btn-default" href="categorie_expences/edit/<?=$category->id;?>" data-toggle="tooltip" data-placement="top" title="<?=label('Edit');?>"><i class="fa fa-pencil"></i></a>

@@ -14,7 +14,14 @@ class Categorie_expences extends MY_Controller
 
     public function index()
     {
-        $this->view_data['categories'] = Categorie_expence::all();
+        $this->view_data['expense_categories_failed'] = false;
+        try {
+            $this->view_data['categories'] = Categorie_expence::all();
+        } catch (Throwable $e) {
+            log_message('error', 'Categorie_expences::index ' . $e->getMessage());
+            $this->view_data['categories'] = array();
+            $this->view_data['expense_categories_failed'] = true;
+        }
         $this->content_view = 'categorie_expence/view';
     }
 
