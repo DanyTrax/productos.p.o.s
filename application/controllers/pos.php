@@ -69,6 +69,30 @@ class Pos extends CI_Controller
         return false;
     }
 
+    /**
+     * @param User|null $user
+     * @return int[]
+     */
+    private function user_assigned_store_ids($user)
+    {
+        if (! $user) {
+            return array();
+        }
+        $ids = array();
+        if (isset($user->store_ids) && trim((string) $user->store_ids) !== '') {
+            foreach (explode(',', (string) $user->store_ids) as $sid) {
+                $sid = (int) trim($sid);
+                if ($sid > 0) {
+                    $ids[] = $sid;
+                }
+            }
+        } elseif (isset($user->store_id) && (int) $user->store_id > 0) {
+            $ids[] = (int) $user->store_id;
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     public function findproduct($code)
     {
         $product = Product::find('first', array(
@@ -84,6 +108,7 @@ class Pos extends CI_Controller
     {
         $user = $this->current_user();
         $canOpenRegister = $this->user_can_open_register($user);
+        $assignedStoreIds = $this->user_assigned_store_ids($user);
         if ($_POST) {
             if (! $canOpenRegister) {
                 $this->output->set_status_header(403);
@@ -95,6 +120,14 @@ class Pos extends CI_Controller
             }
             $cash = $this->input->post('cash');
             $id = $this->input->post('store');
+            if ($user && $user->role !== 'admin' && $user->role !== 'sales' && ! in_array((int) $id, $assignedStoreIds, true)) {
+                $this->output->set_status_header(403);
+                echo json_encode(array(
+                    'status' => false,
+                    'message' => 'Tienda no asignada a este usuario',
+                ));
+                return;
+            }
             $waitersCach = $this->input->post('waitersCach');
             if (! is_array($waitersCach)) {
                 $waitersCach = array();
@@ -128,6 +161,10 @@ class Pos extends CI_Controller
             )
         ));
         $CI = & get_instance();
+        if ($user && $user->role !== 'admin' && $user->role !== 'sales' && ! in_array((int) $id, $assignedStoreIds, true)) {
+            redirect("", "location");
+            return;
+        }
         if ($open_reg) {
             $CI->session->set_userdata('register', $open_reg->id);
         } else {

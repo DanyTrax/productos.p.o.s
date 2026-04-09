@@ -99,6 +99,9 @@ class Settings extends MY_Controller
         date_default_timezone_set($this->setting->timezone);
         $date = date("Y-m-d H:i:s");
         $role = $this->input->post('role');
+        $assignedStoreIds = $this->_extract_assigned_store_ids($role);
+        $_POST['store_ids'] = implode(',', $assignedStoreIds);
+        $_POST['store_id'] = ! empty($assignedStoreIds) ? (int) $assignedStoreIds[0] : null;
         $_POST['can_open_register'] = ($role === 'waiter' && strval($this->input->post('can_open_register')) === '1') ? 1 : 0;
         $_POST['can_close_register'] = ($role === 'waiter' && strval($this->input->post('can_close_register')) === '1') ? 1 : 0;
         $config['upload_path'] = './files/Avatars/';
@@ -132,6 +135,9 @@ class Settings extends MY_Controller
         $date = date("Y-m-d H:i:s");
         if ($_POST) {
             $role = $this->input->post('role');
+            $assignedStoreIds = $this->_extract_assigned_store_ids($role);
+            $_POST['store_ids'] = implode(',', $assignedStoreIds);
+            $_POST['store_id'] = ! empty($assignedStoreIds) ? (int) $assignedStoreIds[0] : null;
             $_POST['can_open_register'] = ($role === 'waiter' && strval($this->input->post('can_open_register')) === '1') ? 1 : 0;
             $_POST['can_close_register'] = ($role === 'waiter' && strval($this->input->post('can_close_register')) === '1') ? 1 : 0;
             $config['upload_path'] = './files/Avatars/';
@@ -213,6 +219,7 @@ class Settings extends MY_Controller
             $this->load->database();
             $files = array(
                 APPPATH . 'sql' . DIRECTORY_SEPARATOR . 'zarest_users_register_permissions.sql',
+                APPPATH . 'sql' . DIRECTORY_SEPARATOR . 'zarest_users_store_ids.sql',
             );
             foreach ($files as $filePath) {
                 $r = $this->_run_sql_update_file($filePath);
@@ -339,6 +346,33 @@ class Settings extends MY_Controller
         }
 
         return $out;
+    }
+
+    /**
+     * Obtiene tiendas asignadas para usuarios de roles por tienda (waiter/kitchen).
+     *
+     * @param string $role
+     * @return int[]
+     */
+    private function _extract_assigned_store_ids($role)
+    {
+        if ($role !== 'waiter' && $role !== 'kitchen') {
+            return array();
+        }
+        $raw = $this->input->post('store_ids');
+        if (! is_array($raw)) {
+            $single = (int) $this->input->post('store_id');
+            return $single > 0 ? array($single) : array();
+        }
+        $ids = array();
+        foreach ($raw as $sid) {
+            $sid = (int) $sid;
+            if ($sid > 0) {
+                $ids[] = $sid;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     public function updateSettings()

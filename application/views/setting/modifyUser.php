@@ -19,26 +19,41 @@
            <div class="form-group">
                <label for="role"><?=label("Role");?></label><br>
                <label class="radio-inline">
-                 <input type="radio" name="role" id="role" value="admin"> <?=label("RoleAdimn");?>
+                <input type="radio" name="role" id="role" value="admin" <?=$user->role==='admin' ? 'checked' : '';?>> <?=label("RoleAdimn");?>
                </label>
                <label class="radio-inline">
-                 <input type="radio" name="role" id="role" value="sales"> <?=label("RoleSales");?>
+                <input type="radio" name="role" id="role" value="sales" <?=$user->role==='sales' ? 'checked' : '';?>> <?=label("RoleSales");?>
                </label>
                <label class="radio-inline">
-                 <input type="radio" name="role" id="role" value="waiter"> <?=label("Waiter");?>
+                <input type="radio" name="role" id="role" value="waiter" <?=$user->role==='waiter' ? 'checked' : '';?>> <?=label("Waiter");?>
                </label>
                <label class="radio-inline">
-                 <input type="radio" name="role" id="role" value="kitchen"> <?=label("Kitchen");?>
+                <input type="radio" name="role" id="role" value="kitchen" <?=$user->role==='kitchen' ? 'checked' : '';?>> <?=label("Kitchen");?>
                </label>
             </div>
 
             <div class="form-group" id="Storeslist">
-              <label for="store_id"><?=label("Store");?></label>
-                    <select class="form-control" name="store_id" id="store_id">
+              <?php
+              $assignedStoreIds = array();
+              if (isset($user->store_ids) && trim((string)$user->store_ids) !== '') {
+                  foreach (explode(',', (string)$user->store_ids) as $sid) {
+                      $sid = (int) trim($sid);
+                      if ($sid > 0) {
+                          $assignedStoreIds[] = $sid;
+                      }
+                  }
+              } elseif (isset($user->store_id) && (int)$user->store_id > 0) {
+                  $assignedStoreIds[] = (int) $user->store_id;
+              }
+              $assignedStoreIds = array_values(array_unique($assignedStoreIds));
+              ?>
+              <label for="store_ids"><?=label("Store");?></label>
+                    <select class="form-control" name="store_ids[]" id="store_ids" multiple size="5">
                       <?php foreach ($stores as $store):?>
-                         <option value="<?=$store->id;?>" <?=$user->store_id===$store->id ? 'selected' : '';?> ><?=$store->name;?></option>
+                         <option value="<?=$store->id;?>" <?=in_array((int)$store->id, $assignedStoreIds, true) ? 'selected' : '';?>><?=$store->name;?></option>
                       <?php endforeach;?>
                     </select>
+                    <p class="text-muted small" style="margin-top:6px;">Puedes seleccionar una o varias tiendas.</p>
 
             </div>
             <div class="form-group" id="waiterPermissions">

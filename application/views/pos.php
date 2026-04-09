@@ -204,6 +204,18 @@ $currentRole = isset($this->user->role) ? $this->user->role : '';
 $isAdminSales = ($currentRole === 'admin' || $currentRole === 'sales');
 $canOpenRegister = $isAdminSales || ($currentRole === 'waiter' && isset($this->user->can_open_register) && strval($this->user->can_open_register) === '1');
 $canCloseRegister = $isAdminSales || ($currentRole === 'waiter' && isset($this->user->can_close_register) && strval($this->user->can_close_register) === '1');
+$assignedStoreIds = array();
+if (isset($this->user->store_ids) && trim((string)$this->user->store_ids) !== '') {
+    foreach (explode(',', (string)$this->user->store_ids) as $sid) {
+        $sid = (int) trim($sid);
+        if ($sid > 0) {
+            $assignedStoreIds[] = $sid;
+        }
+    }
+} elseif (isset($this->user->store_id) && (int)$this->user->store_id > 0) {
+    $assignedStoreIds[] = (int) $this->user->store_id;
+}
+$assignedStoreIds = array_values(array_unique($assignedStoreIds));
 ?>
 <?php if (!$this->session->userdata('register'))
 {?>
@@ -215,7 +227,7 @@ $canCloseRegister = $isAdminSales || ($currentRole === 'waiter' && isset($this->
          <ul id="storeline">
           <?php if($this->user->role !== 'admin' && $this->user->role !== 'sales') { ?>
              <?php foreach ($Stores as $store):?>
-               <?php if($this->user->store_id == $store->id) { ?>
+               <?php if(in_array((int)$store->id, $assignedStoreIds, true)) { ?>
             <a <?= ($store->status == 1 || $canOpenRegister) ? "" : 'style="pointer-events: none; display: inline-block;opacity: 0.3;"';?> href="javascript:void(0)"  onclick="OpenRegister(<?=$store->status ? $store->status : 0;?>, <?=$store->id;?>, '<?=$this->user->role;?>')">
                <li class="listing clearfix">
                  <div class="image_wrapper">

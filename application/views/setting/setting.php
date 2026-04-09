@@ -149,9 +149,29 @@
                             <a class="btn btn-default" href="settings/editUser/<?=$user->id;?>" data-toggle="tooltip" data-placement="top" title="<?=label('Edit');?>"><i class="fa fa-pencil"></i></a>
                           </div>
                        </td>
-                       <td><?php foreach ($stores as $store):?>
-                          <?php if($store->id == $user->store_id) { echo $store->name; }?>
-                       <?php endforeach;?></td>
+                       <td>
+                          <?php
+                          $uStoreIds = array();
+                          if (isset($user->store_ids) && trim((string)$user->store_ids) !== '') {
+                              foreach (explode(',', (string)$user->store_ids) as $sid) {
+                                  $sid = (int) trim($sid);
+                                  if ($sid > 0) {
+                                      $uStoreIds[] = $sid;
+                                  }
+                              }
+                          } elseif (isset($user->store_id) && (int)$user->store_id > 0) {
+                              $uStoreIds[] = (int) $user->store_id;
+                          }
+                          $uStoreIds = array_values(array_unique($uStoreIds));
+                          $uStoreNames = array();
+                          foreach ($stores as $store) {
+                              if (in_array((int)$store->id, $uStoreIds, true)) {
+                                  $uStoreNames[] = $store->name;
+                              }
+                          }
+                          echo !empty($uStoreNames) ? implode(', ', $uStoreNames) : '-';
+                          ?>
+                       </td>
                    </tr>
                 <?php endforeach;?>
                </table>
@@ -436,12 +456,13 @@
                </label>
             </div>
             <div class="form-group" id="Storeslist">
-              <label for="store_id"><?=label("Store");?></label>
-                    <select class="form-control" name="store_id" id="store_id">
+              <label for="store_ids"><?=label("Store");?></label>
+                    <select class="form-control" name="store_ids[]" id="store_ids" multiple size="5">
                       <?php foreach ($stores as $store):?>
                          <option value="<?=$store->id;?>"><?=$store->name;?></option>
                       <?php endforeach;?>
                     </select>
+                    <p class="text-muted small" style="margin-top:6px;">Puedes seleccionar una o varias tiendas.</p>
 
             </div>
             <div class="form-group" id="waiterPermissions" style="display:none;">
