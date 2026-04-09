@@ -450,17 +450,15 @@ CREATE TABLE `zarest_users` (
   `last_active` varchar(50) DEFAULT NULL,
   `avatar` varchar(200) DEFAULT NULL,
   `created_at` varchar(300) DEFAULT NULL,
-  `store_id` int(11) DEFAULT NULL,
-  `can_open_register` tinyint(1) NOT NULL DEFAULT '0',
-  `can_close_register` tinyint(1) NOT NULL DEFAULT '0'
+  `store_id` int(11) DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Volcado de datos para la tabla `zarest_users`
 --
 
-INSERT INTO `zarest_users` (`id`, `username`, `firstname`, `lastname`, `hashed_password`, `email`, `role`, `last_active`, `avatar`, `created_at`, `store_id`, `can_open_register`, `can_close_register`) VALUES
-(1, 'admin', 'admin', 'Doe', '8091d35190efa5d080867aa44c596d0f269f2d3faee949c7a056fbef12a8a67ffbc7a34efe4ac206b15a2747ca63b6c9684a98d94f376aa929e4ebe04a50c16b', 'admin@dar-elweb.com', 'admin', '2020-10-29 11:06:45', '9fff9cc26e539214e9a5fd3b6a10cde9.jpg', '2020-10-29 11:08:23', 1, 1, 1);
+INSERT INTO `zarest_users` (`id`, `username`, `firstname`, `lastname`, `hashed_password`, `email`, `role`, `last_active`, `avatar`, `created_at`, `store_id`) VALUES
+(1, 'admin', 'admin', 'Doe', '8091d35190efa5d080867aa44c596d0f269f2d3faee949c7a056fbef12a8a67ffbc7a34efe4ac206b15a2747ca63b6c9684a98d94f376aa929e4ebe04a50c16b', 'admin@dar-elweb.com', 'admin', '2020-10-29 11:06:45', '9fff9cc26e539214e9a5fd3b6a10cde9.jpg', '2020-10-29 11:08:23', 1);
 
 -- --------------------------------------------------------
 
