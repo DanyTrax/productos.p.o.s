@@ -412,26 +412,34 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 	z-index: 9999;
 }
 
-@media (max-width: 1080px) {
+/* Tablet y móvil: hacer más grandes los elementos táctiles en preapertura. */
+@media (max-width: 1400px) {
+	.pos-preopen-screen .pos-preopen-vimenu li a {
+		width: 2.8em !important;
+		height: 2.8em !important;
+		padding-top: 10px !important;
+		font-size: 22px !important;
+	}
+
 	.pos-preopen-screen .choose_store {
-		font-size: 2.2em;
-		margin-top: 44px;
-		margin-bottom: 18px;
+		font-size: 2.45em;
+		margin-top: 34px;
+		margin-bottom: 22px;
 	}
 
 	.pos-preopen-screen #storeline .listing {
 		width: 100%;
-		padding: 1.25em;
-		margin-bottom: 1.15em;
-		border-radius: 12px;
+		padding: 1.5em;
+		margin-bottom: 1.2em;
+		border-radius: 14px;
 	}
 
 	.pos-preopen-screen #storeline .listing .image_wrapper {
-		width: 84px;
+		width: 96px;
 	}
 
 	.pos-preopen-screen #storeline .listing .image_wrapper img {
-		width: 78px;
+		width: 90px;
 	}
 
 	.pos-preopen-screen #storeline .listing .info {
@@ -440,24 +448,81 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 	}
 
 	.pos-preopen-screen #storeline .listing .info .store_title {
-		font-size: 1.8em;
+		font-size: 2em;
 		line-height: 1.2;
 	}
 
 	.pos-preopen-screen #storeline .listing .info .store_info {
-		font-size: 1.05em;
+		font-size: 1.12em;
 	}
 
 	.pos-preopen-screen #storeline .listing .store_type {
-		font-size: 1em;
-		width: 130px;
+		font-size: 1.08em;
+		width: 140px;
 	}
 
 	.pos-preopen-screen .btn,
 	.pos-preopen-screen .btn-green {
-		min-height: 56px;
-		font-size: 24px;
-		padding: 12px 22px;
+		min-height: 64px;
+		font-size: 28px;
+		padding: 13px 26px;
+		border-radius: 12px;
+	}
+}
+
+@media (max-width: 1080px) {
+	.pos-preopen-screen .pos-preopen-vimenu li a {
+		width: 3em !important;
+		height: 3em !important;
+		padding-top: 11px !important;
+		font-size: 24px !important;
+	}
+
+	.pos-preopen-screen .choose_store {
+		font-size: 2.6em;
+		margin-top: 40px;
+		margin-bottom: 18px;
+	}
+
+	.pos-preopen-screen #storeline .listing {
+		width: 100%;
+		padding: 1.55em;
+		margin-bottom: 1.15em;
+		border-radius: 12px;
+	}
+
+	.pos-preopen-screen #storeline .listing .image_wrapper {
+		width: 102px;
+	}
+
+	.pos-preopen-screen #storeline .listing .image_wrapper img {
+		width: 96px;
+	}
+
+	.pos-preopen-screen #storeline .listing .info {
+		width: auto;
+		padding-left: 18px;
+	}
+
+	.pos-preopen-screen #storeline .listing .info .store_title {
+		font-size: 2.2em;
+		line-height: 1.2;
+	}
+
+	.pos-preopen-screen #storeline .listing .info .store_info {
+		font-size: 1.18em;
+	}
+
+	.pos-preopen-screen #storeline .listing .store_type {
+		font-size: 1.12em;
+		width: 150px;
+	}
+
+	.pos-preopen-screen .btn,
+	.pos-preopen-screen .btn-green {
+		min-height: 70px;
+		font-size: 32px;
+		padding: 14px 28px;
 		border-radius: 10px;
 	}
 }
