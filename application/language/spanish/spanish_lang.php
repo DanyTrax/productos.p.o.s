@@ -218,6 +218,7 @@ $lang['DIFFERENCES'] = "Diferencias";
 $lang['PaymentsSummary'] = "Resumen pagos";
 $lang['CloseRegisterByMethod'] = "Desglose por medio de pago";
 $lang['CloseRegisterNoMethodTotals'] = "No hay importes por medio de pago en este turno.";
+$lang['CloseRegisterFailed'] = "No se pudo cerrar la caja";
 $lang['Openingtime'] = "Tiempo de apertura";
 $lang['Openedby'] = "Abierto por";
 $lang['note'] = "Nota";

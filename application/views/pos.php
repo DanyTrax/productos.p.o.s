@@ -1526,14 +1526,25 @@ function SubmitRegister() {
    $.ajax({
       url : "<?php echo site_url('pos/SubmitRegister')?>/",
       type: "POST",
+      dataType: "json",
       data: {close_lines: JSON.stringify(lines), RegisterNote: RegisterNote},
       success: function(data)
       {
-         window.location.href = "<?php echo site_url()?>";
+         if (data && data.status === true) {
+            window.location.href = "<?php echo site_url()?>";
+         } else {
+            alert((data && data.message) ? data.message : "<?= htmlspecialchars(label('CloseRegisterFailed'), ENT_QUOTES, 'UTF-8'); ?>");
+         }
       },
       error: function (jqXHR, textStatus, errorThrown)
       {
-          alert("error");
+         var msg = "<?= htmlspecialchars(label('CloseRegisterFailed'), ENT_QUOTES, 'UTF-8'); ?>";
+         try {
+            var j = JSON.parse(jqXHR.responseText);
+            if (j && j.message) { msg = j.message; }
+         } catch (e) {}
+         if (jqXHR.status === 0) { msg += " (red)"; }
+         alert(msg);
       }
    });
 

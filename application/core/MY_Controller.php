@@ -19,6 +19,7 @@ class My_Controller extends CI_Controller
 		parent::__construct();
 		$this->user = $this->session->userdata('user_id') ? User::find_by_id($this->session->userdata('user_id')) : FALSE;
 		$this->setting = Setting::find(1);
+		sync_register_session($this);
 		$this->register = $this->session->userdata('register') ? $this->session->userdata('register') : FALSE;
 		date_default_timezone_set($this->setting->timezone);
 		$this->session->set_userdata('lang', $this->setting->language);

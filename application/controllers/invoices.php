@@ -12,6 +12,7 @@ class Invoices extends CI_Controller
         $this->user = $this->session->userdata('user_id') ? User::find_by_id($this->session->userdata('user_id')) : FALSE;
         $lang = $this->session->userdata("lang") == null ? "english" : $this->session->userdata("lang");
         $this->lang->load($lang, $lang);
+        sync_register_session($this);
         $this->register = $this->session->userdata('register') ? $this->session->userdata('register') : FALSE;
 
         $this->setting = Setting::find(1);

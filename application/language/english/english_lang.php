@@ -221,6 +221,7 @@ $lang['DIFFERENCES'] = "Differences";
 $lang['PaymentsSummary'] = "Payments Summary";
 $lang['CloseRegisterByMethod'] = "Breakdown by payment method";
 $lang['CloseRegisterNoMethodTotals'] = "No amounts by payment method for this shift.";
+$lang['CloseRegisterFailed'] = "Could not close register";
 $lang['Openingtime'] = "Opening time";
 $lang['Openedby'] = "Opened by";
 $lang['note'] = "Note";

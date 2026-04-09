@@ -11,6 +11,7 @@ class Pos extends CI_Controller
         parent::__construct();
         $lang = $this->session->userdata("lang") == null ? "english" : $this->session->userdata("lang");
         $this->lang->load($lang, $lang);
+        sync_register_session($this);
         $this->register = $this->session->userdata('register') ? $this->session->userdata('register') : FALSE;
         $this->store = $this->session->userdata('store') ? $this->session->userdata('store') : FALSE;
         $this->selectedTable = $this->session->userdata('selectedTable') ? $this->session->userdata('selectedTable') : FALSE;
@@ -68,7 +69,11 @@ class Pos extends CI_Controller
             )
         ));
         $CI = & get_instance();
-        $CI->session->set_userdata('register', $open_reg->id);
+        if ($open_reg) {
+            $CI->session->set_userdata('register', $open_reg->id);
+        } else {
+            $CI->session->set_userdata('register', 0);
+        }
         $CI->session->set_userdata('store', $id);
         if($userRole === 'kitchen') {
           redirect("kitchens", "location");
@@ -1022,92 +1027,112 @@ class Pos extends CI_Controller
 
     public function SubmitRegister()
     {
-        date_default_timezone_set($this->setting->timezone);
-        $date = date("Y-m-d H:i:s");
-        $noteText = (string) $this->input->post('RegisterNote');
-        $cashE = 0.0;
-        $cashC = 0.0;
-        $ccE = 0.0;
-        $ccC = 0.0;
-        $chE = 0.0;
-        $chC = 0.0;
-        $lines = json_decode((string) $this->input->post('close_lines'), true);
-        if (is_array($lines) && count($lines) > 0) {
-            foreach ($lines as $ln) {
-                if (! is_array($ln)) {
-                    continue;
-                }
-                $exp = $this->parse_close_register_amount(isset($ln['expected']) ? $ln['expected'] : 0);
-                $cnt = $this->parse_close_register_amount(isset($ln['counted']) ? $ln['counted'] : 0);
-                $tc = isset($ln['type']) ? (string) $ln['type'] : 'cash';
-                if ($tc === 'card') {
-                    $ccE += $exp;
-                    $ccC += $cnt;
-                } elseif ($tc === 'cheque') {
-                    $chE += $exp;
-                    $chC += $cnt;
-                } else {
-                    $cashE += $exp;
-                    $cashC += $cnt;
-                }
+        $this->output->set_content_type('application/json');
+        try {
+            if (! $this->register) {
+                $this->output->set_status_header(400);
+                echo json_encode(array(
+                    'status' => false,
+                    'message' => label('requiresRegister'),
+                ));
+
+                return;
             }
-            $noteText .= "\n\n[REGISTER_CLOSE_LINES_JSON]" . json_encode($lines, JSON_UNESCAPED_UNICODE) . "[/REGISTER_CLOSE_LINES_JSON]";
-        } else {
-            $cashE = $this->parse_close_register_amount($this->input->post('expectedcash'));
-            $cashC = $this->parse_close_register_amount($this->input->post('countedcash'));
-            $ccE = $this->parse_close_register_amount($this->input->post('expectedcc'));
-            $ccC = $this->parse_close_register_amount($this->input->post('countedcc'));
-            $chE = $this->parse_close_register_amount($this->input->post('expectedcheque'));
-            $chC = $this->parse_close_register_amount($this->input->post('countedcheque'));
+
+            date_default_timezone_set($this->setting->timezone);
+            $date = date('Y-m-d H:i:s');
+            $noteText = (string) $this->input->post('RegisterNote');
+            $cashE = 0.0;
+            $cashC = 0.0;
+            $ccE = 0.0;
+            $ccC = 0.0;
+            $chE = 0.0;
+            $chC = 0.0;
+            $lines = json_decode((string) $this->input->post('close_lines'), true);
+            if (is_array($lines) && count($lines) > 0) {
+                foreach ($lines as $ln) {
+                    if (! is_array($ln)) {
+                        continue;
+                    }
+                    $exp = $this->parse_close_register_amount(isset($ln['expected']) ? $ln['expected'] : 0);
+                    $cnt = $this->parse_close_register_amount(isset($ln['counted']) ? $ln['counted'] : 0);
+                    $tc = isset($ln['type']) ? (string) $ln['type'] : 'cash';
+                    if ($tc === 'card') {
+                        $ccE += $exp;
+                        $ccC += $cnt;
+                    } elseif ($tc === 'cheque') {
+                        $chE += $exp;
+                        $chC += $cnt;
+                    } else {
+                        $cashE += $exp;
+                        $cashC += $cnt;
+                    }
+                }
+                $noteText .= "\n\n[REGISTER_CLOSE_LINES_JSON]" . json_encode($lines, JSON_UNESCAPED_UNICODE) . '[/REGISTER_CLOSE_LINES_JSON]';
+            } else {
+                $cashE = $this->parse_close_register_amount($this->input->post('expectedcash'));
+                $cashC = $this->parse_close_register_amount($this->input->post('countedcash'));
+                $ccE = $this->parse_close_register_amount($this->input->post('expectedcc'));
+                $ccC = $this->parse_close_register_amount($this->input->post('countedcc'));
+                $chE = $this->parse_close_register_amount($this->input->post('expectedcheque'));
+                $chC = $this->parse_close_register_amount($this->input->post('countedcheque'));
+            }
+            $dec = (int) $this->setting->decimals;
+            $data = array(
+                'cash_total' => number_format($cashE, $dec, '.', ''),
+                'cash_sub' => number_format($cashC, $dec, '.', ''),
+                'cc_total' => number_format($ccE, $dec, '.', ''),
+                'cc_sub' => number_format($ccC, $dec, '.', ''),
+                'cheque_total' => number_format($chE, $dec, '.', ''),
+                'cheque_sub' => number_format($chC, $dec, '.', ''),
+                'note' => $noteText,
+                'closed_by' => $this->session->userdata('user_id'),
+                'closed_at' => $date,
+                'status' => 0,
+            );
+
+            $Register = Register::find($this->register);
+
+            $store = Store::find($Register->store_id);
+            $store->status = 0;
+            $store->save();
+
+            $tables = Table::find('all', array('conditions' => array('store_id = ?', $Register->store_id)));
+            foreach ($tables as $table) {
+                $table->status = 0;
+                $table->time = '';
+                $table->save();
+            }
+
+            $Register->update_attributes($data);
+
+            Hold::delete_all(array(
+                'conditions' => array(
+                    'register_id = ?',
+                    $Register->id,
+                ),
+            ));
+            Posale::delete_all(array(
+                'conditions' => array(
+                    'register_id = ?',
+                    $Register->id,
+                ),
+            ));
+
+            $CI = & get_instance();
+            $CI->session->set_userdata('register', 0);
+
+            echo json_encode(array(
+                'status' => true,
+            ));
+        } catch (Throwable $e) {
+            log_message('error', 'SubmitRegister: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+            $this->output->set_status_header(500);
+            echo json_encode(array(
+                'status' => false,
+                'message' => label('CloseRegisterFailed') . ': ' . $e->getMessage(),
+            ));
         }
-        $dec = (int) $this->setting->decimals;
-        $data = array(
-            "cash_total" => number_format($cashE, $dec, '.', ''),
-            "cash_sub" => number_format($cashC, $dec, '.', ''),
-            "cc_total" => number_format($ccE, $dec, '.', ''),
-            "cc_sub" => number_format($ccC, $dec, '.', ''),
-            "cheque_total" => number_format($chE, $dec, '.', ''),
-            "cheque_sub" => number_format($chC, $dec, '.', ''),
-            "note" => $noteText,
-            "closed_by" => $this->session->userdata('user_id'),
-            "closed_at" => $date,
-            "status" => 0
-        );
-
-        $Register = Register::find($this->register);
-
-        $store = Store::find($Register->store_id);
-        $store->status = 0;
-        $store->save();
-
-        $tables = Table::find('all', array('conditions' => array('store_id = ?', $Register->store_id)));
-        foreach ($tables as $table) {
-           $table->status = 0;
-           $table->time = '';
-           $table->save();
-        }
-
-        $Register->update_attributes($data);
-
-        Hold::delete_all(array(
-            'conditions' => array(
-                'register_id = ?',
-                $Register->id
-            )
-        ));
-        Posale::delete_all(array(
-            'conditions' => array(
-                'register_id = ?',
-                $Register->id
-            )
-        ));
-
-        $CI = & get_instance();
-        $CI->session->set_userdata('register', 0);
-
-        echo json_encode(array(
-            "status" => TRUE
-        ));
     }
 
     public function email()
