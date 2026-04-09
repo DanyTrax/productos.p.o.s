@@ -396,3 +396,68 @@ ul.cbp-vimenu2 .pos-fullscreen-toggle a {
 	color: #555;
 	cursor: not-allowed;
 }
+
+/*
+ * PRE-APERTURA POS (elige tienda): mejorar touch targets en tablet/móvil
+ * y permitir ocultar/mostrar menú superior también antes de abrir caja.
+ */
+.pos-preopen-screen {
+	position: relative;
+}
+
+.pos-preopen-screen .pos-preopen-vimenu {
+	position: fixed;
+	top: 80px;
+	right: 0;
+	z-index: 9999;
+}
+
+@media (max-width: 1080px) {
+	.pos-preopen-screen .choose_store {
+		font-size: 2.2em;
+		margin-top: 44px;
+		margin-bottom: 18px;
+	}
+
+	.pos-preopen-screen #storeline .listing {
+		width: 100%;
+		padding: 1.25em;
+		margin-bottom: 1.15em;
+		border-radius: 12px;
+	}
+
+	.pos-preopen-screen #storeline .listing .image_wrapper {
+		width: 84px;
+	}
+
+	.pos-preopen-screen #storeline .listing .image_wrapper img {
+		width: 78px;
+	}
+
+	.pos-preopen-screen #storeline .listing .info {
+		width: auto;
+		padding-left: 18px;
+	}
+
+	.pos-preopen-screen #storeline .listing .info .store_title {
+		font-size: 1.8em;
+		line-height: 1.2;
+	}
+
+	.pos-preopen-screen #storeline .listing .info .store_info {
+		font-size: 1.05em;
+	}
+
+	.pos-preopen-screen #storeline .listing .store_type {
+		font-size: 1em;
+		width: 130px;
+	}
+
+	.pos-preopen-screen .btn,
+	.pos-preopen-screen .btn-green {
+		min-height: 56px;
+		font-size: 24px;
+		padding: 12px 22px;
+		border-radius: 10px;
+	}
+}

@@ -219,7 +219,10 @@ $assignedStoreIds = array_values(array_unique($assignedStoreIds));
 ?>
 <?php if (!$this->session->userdata('register'))
 {?>
-   <div class="container container-small">
+   <div class="container container-small pos-preopen-screen">
+      <ul class="cbp-vimenu pos-preopen-vimenu">
+        <li class="pos-floating-nav-toggle"><a href="javascript:void(0)" class="pos-nav-toggle-float" onclick="togglePosMainNav(); return false;" title="<?= htmlspecialchars(label('PosNavHide'), ENT_QUOTES, 'UTF-8'); ?>"><i class="fa fa-chevron-up" aria-hidden="true"></i></a></li>
+      </ul>
       <div class="row">
          <h1 class="text-center choose_store"> <?=label('ChooseStore');?> </h1>
       </div>
