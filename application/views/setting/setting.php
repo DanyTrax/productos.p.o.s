@@ -450,14 +450,14 @@
                 <label>
                   <input type="hidden" name="can_open_register" value="0">
                   <input type="checkbox" name="can_open_register" value="1">
-                  Permitir apertura de tienda/caja en POS
+                  <span class="label-text">Permitir apertura de tienda/caja en POS</span>
                 </label>
               </div>
               <div class="checkbox">
                 <label>
                   <input type="hidden" name="can_close_register" value="0">
                   <input type="checkbox" name="can_close_register" value="1">
-                  Permitir cierre de caja en POS
+                  <span class="label-text">Permitir cierre de caja en POS</span>
                 </label>
               </div>
             </div>

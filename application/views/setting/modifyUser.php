@@ -47,14 +47,14 @@
                 <label>
                   <input type="hidden" name="can_open_register" value="0">
                   <input type="checkbox" name="can_open_register" value="1" <?=isset($user->can_open_register) && strval($user->can_open_register) === '1' ? 'checked' : '';?>>
-                  Permitir apertura de tienda/caja en POS
+                  <span class="label-text">Permitir apertura de tienda/caja en POS</span>
                 </label>
               </div>
               <div class="checkbox">
                 <label>
                   <input type="hidden" name="can_close_register" value="0">
                   <input type="checkbox" name="can_close_register" value="1" <?=isset($user->can_close_register) && strval($user->can_close_register) === '1' ? 'checked' : '';?>>
-                  Permitir cierre de caja en POS
+                  <span class="label-text">Permitir cierre de caja en POS</span>
                 </label>
               </div>
             </div>
