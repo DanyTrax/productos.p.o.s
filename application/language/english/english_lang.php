@@ -346,6 +346,8 @@ $lang['AddPayements'] = "Add Payements";
 $lang['SalesDateTime'] = "Date & time";
 $lang['SalesApplyFilter'] = "Filter list";
 $lang['SalesColumns'] = "Columns";
+$lang['SalesPaymentMethod'] = "Payment method";
+$lang['SalesPaymentMethodAll'] = "All methods";
 
 // ********************* Report page *********************
 

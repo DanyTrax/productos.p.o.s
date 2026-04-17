@@ -16,6 +16,7 @@ class Invoice_model extends CI_Model
         'total',
         'created_by',
         'totalitems',
+        'paidmethod',
         'status',
     );
 
@@ -45,10 +46,36 @@ class Invoice_model extends CI_Model
         }
     }
 
+    /**
+     * Misma clave que guarda el POS en paidmethod (primer segmento antes de ~).
+     * Solo aplica filtro si la clave es no vacía y numérica (no altera consultas si no se envía).
+     *
+     * @param string|null $explicit Si no es null, usa este valor en lugar de POST.
+     */
+    private function _apply_payment_method_filter($explicit = null)
+    {
+        $key = $explicit !== null ? trim((string) $explicit) : '';
+        if ($key === '' && isset($_POST['payment_method_key'])) {
+            $key = trim((string) $_POST['payment_method_key']);
+        }
+        if ($key === '' || strcasecmp($key, 'all') === 0) {
+            return;
+        }
+        if (! preg_match('/^[0-9]+$/', $key)) {
+            return;
+        }
+        $this->db->where(
+            'SUBSTRING_INDEX(TRIM(IFNULL(paidmethod, \'\')), \'~\', 1) = ' . $this->db->escape($key),
+            null,
+            false
+        );
+    }
+
     private function _get_datatables_query()
     {
         $this->db->from($this->table);
         $this->_apply_date_range();
+        $this->_apply_payment_method_filter();
 
         $column = $this->column;
         $searchVal = isset($_POST['search']['value']) ? trim((string) $_POST['search']['value']) : '';
@@ -101,6 +128,7 @@ class Invoice_model extends CI_Model
     {
         $this->db->from($this->table);
         $this->_apply_date_range();
+        $this->_apply_payment_method_filter();
 
         return $this->db->count_all_results();
     }
@@ -111,9 +139,10 @@ class Invoice_model extends CI_Model
      * @param string $date_start Y-m-d
      * @param string $date_end   Y-m-d
      * @param string $search     mismo criterio que DataTables search
+     * @param string $payment_method_key misma clave que POST payment_method_key (opcional)
      * @return array
      */
-    public function get_sales_for_export($date_start, $date_end, $search = '')
+    public function get_sales_for_export($date_start, $date_end, $search = '', $payment_method_key = '')
     {
         $this->db->from($this->table);
         $ds = trim((string) $date_start);
@@ -125,6 +154,7 @@ class Invoice_model extends CI_Model
             $this->db->where('DATE(created_at) >=', $ds);
             $this->db->where('DATE(created_at) <=', $de);
         }
+        $this->_apply_payment_method_filter($payment_method_key);
         $searchVal = trim((string) $search);
         if ($searchVal !== '') {
             $searchVal = ltrim($searchVal, '0');

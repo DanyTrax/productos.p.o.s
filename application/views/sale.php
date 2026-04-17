@@ -12,6 +12,13 @@
                 <input type="text" class="form-control" id="salesDateRange" readonly />
               </div>
             </div>
+            <div class="sales-list-toolbar-pm">
+              <label for="salesPaymentMethod" class="sales-list-toolbar-date-label"><?=label('SalesPaymentMethod');?></label>
+              <select class="form-control" id="salesPaymentMethod">
+                <option value=""><?=htmlspecialchars(label('SalesPaymentMethodAll'), ENT_QUOTES, 'UTF-8');?></option>
+                <?php $this->load->view('partials/payment_method_select_options', array('payment_methods' => isset($payment_methods) ? $payment_methods : array())); ?>
+              </select>
+            </div>
             <button type="button" class="btn btn-picker" id="salesFilterBtn"><?=label('SalesApplyFilter');?></button>
             <button type="button" class="btn btn-danger" id="salesExportPdf"><?=label('ExportPDF');?></button>
             <button type="button" class="btn btn-success" id="salesExportExcel"><?=label('ExportExcel');?></button>
@@ -49,6 +56,14 @@
         min-width: 200px;
         max-width: 360px;
       }
+      .sales-list-toolbar-pm {
+        flex: 0 1 220px;
+        min-width: 160px;
+        max-width: 280px;
+      }
+      .sales-list-toolbar-pm select {
+        width: 100%;
+      }
       .sales-list-toolbar-date-label {
         display: block;
         font-weight: normal;
@@ -82,6 +97,10 @@
           flex: 1 1 100%;
           max-width: none;
         }
+        .sales-list-toolbar-pm {
+          flex: 1 1 100%;
+          max-width: none;
+        }
         .sales-list-toolbar-columns {
           margin-left: 0;
         }
@@ -98,6 +117,7 @@
           <th><?=label('Total');?></th>
           <th><?=label('Createdby');?></th>
           <th><?=label('TotalItems');?></th>
+          <th><?=label('SalesPaymentMethod');?></th>
           <th><?=label('Status');?></th>
           <th><?=label('Action');?></th>
         </tr>
@@ -149,6 +169,7 @@
               salesRefreshRangeParams();
               d.date_start = salesDateStart;
               d.date_end = salesDateEnd;
+              d.payment_method_key = $('#salesPaymentMethod').val() || '';
             }
         },
         "columnDefs": [
@@ -177,6 +198,7 @@
         form.append($('<input>', { type: 'hidden', name: 'date_start', value: salesDateStart }));
         form.append($('<input>', { type: 'hidden', name: 'date_end', value: salesDateEnd }));
         form.append($('<input>', { type: 'hidden', name: 'search', value: searchVal }));
+        form.append($('<input>', { type: 'hidden', name: 'payment_method_key', value: $('#salesPaymentMethod').val() || '' }));
         $('body').append(form);
         form.submit();
         form.remove();

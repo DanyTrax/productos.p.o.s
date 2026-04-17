@@ -345,6 +345,8 @@ $lang['AddPayements'] = "Agregar pagos";
 $lang['SalesDateTime'] = "Fecha y hora";
 $lang['SalesApplyFilter'] = "Filtrar lista";
 $lang['SalesColumns'] = "Columnas";
+$lang['SalesPaymentMethod'] = "Método de pago";
+$lang['SalesPaymentMethodAll'] = "Todos los medios";
 
 // ********************* Report page *********************
 

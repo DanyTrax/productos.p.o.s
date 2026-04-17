@@ -47,6 +47,7 @@ class Invoices extends CI_Controller
             $row[] = number_format((float)$invoice->total, $this->setting->decimals, '.', '');
             $row[] = $invoice->created_by;
             $row[] = $invoice->totalitems;
+            $row[] = htmlspecialchars(Payment_method::display_label($invoice->paidmethod), ENT_QUOTES, 'UTF-8');
 
             switch ($invoice->status) {
                 case 1: // case Credit Card
@@ -99,8 +100,9 @@ class Invoices extends CI_Controller
         $ds = trim((string) $this->input->post('date_start'));
         $de = trim((string) $this->input->post('date_end'));
         $search = (string) $this->input->post('search');
+        $pmKey = trim((string) $this->input->post('payment_method_key'));
 
-        $list = $this->invoice->get_sales_for_export($ds, $de, $search);
+        $list = $this->invoice->get_sales_for_export($ds, $de, $search, $pmKey);
         $headers = array(
             label('Number'),
             label('Customer'),
@@ -110,6 +112,7 @@ class Invoices extends CI_Controller
             label('Total'),
             label('Createdby'),
             label('TotalItems'),
+            label('SalesPaymentMethod'),
             label('Status'),
         );
         $curSuf = ' ' . $this->setting->currency;
@@ -136,6 +139,7 @@ class Invoices extends CI_Controller
                 number_format((float) $invoice->total, $this->setting->decimals, '.', '') . $curSuf,
                 (string) $invoice->created_by,
                 (string) $invoice->totalitems,
+                Payment_method::display_label($invoice->paidmethod),
                 label($stKey),
             );
         }
@@ -144,6 +148,12 @@ class Invoices extends CI_Controller
         $subtitle = ($ds !== '' && $de !== '')
             ? (label('SelectRange') . ': ' . $ds . ' — ' . $de)
             : '';
+        if ($pmKey !== '' && strcasecmp($pmKey, 'all') !== 0 && preg_match('/^[0-9]+$/', $pmKey)) {
+            $pmLabel = Payment_method::display_label($pmKey);
+            $subtitle = $subtitle === ''
+                ? (label('SalesPaymentMethod') . ': ' . $pmLabel)
+                : ($subtitle . ' | ' . label('SalesPaymentMethod') . ': ' . $pmLabel);
+        }
         $n = count($rows);
         $sumFmt = number_format($sumTotal, $this->setting->decimals, '.', '') . $curSuf;
         $footerPlain = label('Total') . ' (' . $n . '): ' . $sumFmt;
